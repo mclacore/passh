@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 )
 
 const (
@@ -15,8 +14,15 @@ const (
 )
 
 func generatePassword(n int) string {
-	pw := strings.Builder
+	pw := strings.Builder{}
+	pw.Grow(n)
+	for i := 0; i < n; i++ {
+		pw.WriteByte(lowercase[rand.Intn(len(lowercase))])
+	}
+
+	return pw.String()
 }
 
 func main() {
+	fmt.Println(generatePassword(20))
 }
