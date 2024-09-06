@@ -17,7 +17,8 @@ func generatePassword(n int) string {
 	pw := strings.Builder{}
 	pw.Grow(n)
 	for i := 0; i < n; i++ {
-		pw.WriteByte(lowercase[rand.Intn(len(lowercase))])
+		chars := []string{lowercase, uppercase}
+		pw.WriteByte(chars[rand.Intn(len(chars))])
 	}
 
 	return pw.String()
