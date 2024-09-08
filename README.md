@@ -2,7 +2,7 @@
 
 ![Passh logo](./assets/logo-no-background.png)
 
-passh is a CLI-based password manager.
+**Pass** is an open-source password manager written in Go. It uses the `pass` command line tool to easily store and retreive your passwords.
 
 ## Installation
 
