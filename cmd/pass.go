@@ -15,7 +15,7 @@ func NewCmdPass() *cobra.Command {
 	passNewCmd := &cobra.Command{
 		Use:   "new",
 		Short: "Generate a new password",
-		RunE:  passNewCmd,
+		Run:   runNewPass,
 	}
 	passNewCmd.Flags().Int64P("length", "l", 12, "Length of the password")
 	passNewCmd.Flags().BoolP("uppercase", "u", false, "Include uppercase characters")
@@ -27,7 +27,7 @@ func NewCmdPass() *cobra.Command {
 	return passCmd
 }
 
-func passNewCmd(cmd *cobra.Command, args []string) error {
+func runNewPass(cmd *cobra.Command, args []string) {
 	length, _ := cmd.Flags().GetInt64("length")
 	uppercase, _ := cmd.Flags().GetBool("uppercase")
 	lowercase, _ := cmd.Flags().GetBool("lowercase")
@@ -53,5 +53,4 @@ func passNewCmd(cmd *cobra.Command, args []string) error {
 		password[i] = charset[rand.Intn(len(charset))]
 	}
 	cmd.Println(string(password))
-	return nil
 }
