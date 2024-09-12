@@ -30,28 +30,42 @@ func NewCmdLogin() *cobra.Command {
 		Run:   func(cmd *cobra.Command, args []string) { loginNewCmd(&login) },
 	}
 
-	genPass := runNewPass(passNewCmd, "--uppercase, --numbers, --special") // need to get the result of this function call to pass in a default.
 	loginNewCmd.Flags().StringVarP(&login.itemName, "item-name", "i", "", "Name for the login item")
 	loginNewCmd.Flags().StringVarP(&login.username, "username", "u", "", "Username for the login credential")
-	loginNewCmd.Flags().StringVarP(&login.password, "password", "p", genPass, "Password for the login credential")
+	loginNewCmd.Flags().StringVarP(&login.password, "password", "p", "", "Password for the login credential")
 	loginNewCmd.Flags().StringVarP(&login.url, "url", "r", "", "URL for the login credential")
 
 	loginCmd.AddCommand(loginNewCmd)
 	return loginCmd
 }
 
-func loginNewCmd(input *loginItem) {
+func loginNewCmd(cmd *cobra.Command, input *loginItem) error {
+	var password string
+
+	passwordArg, argErr := cmd.Flags().GetString("password")
+	if argErr != nil {
+		return argErr
+	}
+
+	if passwordArg == "" {
+		args := []string{"--uppercase", "--numbers", "--special"}
+
+		password = string(runNewPass(cmd, args))
+	} else {
+		password = input.password
+	}
+
 	loginItem := [][]string{
 		{input.itemName},
 		{input.username},
-		{input.password},
+		{password},
 		{input.url},
 	}
 
 	// add check for if file exists
-	loginFile, err := os.Create("temp.csv")
-	if err != nil {
-		log.Fatal(err)
+	loginFile, createErr := os.Create("temp.csv")
+	if createErr != nil {
+		return createErr
 	}
 	defer loginFile.Close()
 
@@ -59,5 +73,5 @@ func loginNewCmd(input *loginItem) {
 
 	defer writer.Flush()
 
-	writer.WriteAll(loginItem)
+	return writer.WriteAll(loginItem)
 }
