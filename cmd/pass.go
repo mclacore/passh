@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"math/rand"
-
+	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +37,7 @@ func runNewPass(cmd *cobra.Command, args []string) error {
 		return upperErr
 	}
 
-	lowercase, lowerErr := cmd.Flags().GetBool("lowercase")
+	lowercase, lowerErr := cmd.Flags().GetBool("exclude-lowercase")
 	if lowerErr != nil {
 		return lowerErr
 	}
@@ -53,26 +52,9 @@ func runNewPass(cmd *cobra.Command, args []string) error {
 		return specErr
 	}
 
-	charset := ""
-	if uppercase {
-		charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	}
-	if !lowercase {
-		charset += "abcdefghijklmnopqrstuvwxyz"
-	}
-	if numbers {
-		charset += "0123456789"
-	}
-	if special {
-		charset += "!@#$%^&*()_+~><"
-	}
+	password := password.GeneratePassword(length, uppercase, lowercase, numbers, special)
 
-	password := make([]byte, length)
-	for i := range password {
-		password[i] = charset[rand.Intn(len(charset))]
-	}
-
-	cmd.Println(string(password))
+	cmd.Println(password)
 
 	return nil
 }

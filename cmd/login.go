@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"encoding/csv"
-	"log"
 	"os"
 
+	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
-	// "github.com/mclacore/passh/pkg/login"
 )
 
 type loginItem struct {
@@ -27,7 +26,7 @@ func NewCmdLogin() *cobra.Command {
 	loginNewCmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new login credential",
-		Run:   func(cmd *cobra.Command, args []string) { loginNewCmd(&login) },
+		Run:   func(cmd *cobra.Command, args []string) { runNewLogin(&login) },
 	}
 
 	loginNewCmd.Flags().StringVarP(&login.itemName, "item-name", "i", "", "Name for the login item")
@@ -39,26 +38,15 @@ func NewCmdLogin() *cobra.Command {
 	return loginCmd
 }
 
-func loginNewCmd(cmd *cobra.Command, input *loginItem) error {
-	var password string
-
-	passwordArg, argErr := cmd.Flags().GetString("password")
-	if argErr != nil {
-		return argErr
-	}
-
-	if passwordArg == "" {
-		args := []string{"--uppercase", "--numbers", "--special"}
-
-		password = string(runNewPass(cmd, args))
-	} else {
-		password = input.password
+func runNewLogin(input *loginItem) error {
+	if input.password == "" {
+		input.password = password.GeneratePassword(12, false, true, true, true)
 	}
 
 	loginItem := [][]string{
 		{input.itemName},
 		{input.username},
-		{password},
+		{input.password},
 		{input.url},
 	}
 
