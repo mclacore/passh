@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/csv"
+	"errors"
 	"os"
 
 	"github.com/mclacore/passh/pkg/password"
@@ -30,6 +31,7 @@ func NewCmdLogin() *cobra.Command {
 	}
 
 	loginNewCmd.Flags().StringVarP(&login.itemName, "item-name", "i", "", "Name for the login item")
+	_ = loginNewCmd.MarkFlagRequired("item-name")
 	loginNewCmd.Flags().StringVarP(&login.username, "username", "u", "", "Username for the login credential")
 	loginNewCmd.Flags().StringVarP(&login.password, "password", "p", "", "Password for the login credential")
 	loginNewCmd.Flags().StringVarP(&login.url, "url", "r", "", "URL for the login credential")
@@ -50,11 +52,14 @@ func runNewLogin(input *loginItem) error {
 		{input.url},
 	}
 
-	// add check for if file exists
-	loginFile, createErr := os.Create("temp.csv")
-	if createErr != nil {
-		return createErr
+	if _, err := os.Stat("temp.csv"); errors.Is(err, os.ErrNotExist) {
+		loginFile, createErr := os.Create("temp.csv")
+		if createErr != nil {
+			return createErr
+		}
 	}
+
+	// add check for if file exists
 	defer loginFile.Close()
 
 	writer := csv.NewWriter(loginFile)
