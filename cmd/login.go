@@ -1,20 +1,12 @@
 package cmd
 
 import (
-	"encoding/csv"
-	"errors"
-	"os"
+	"fmt"
 
 	"github.com/mclacore/passh/pkg/password"
+	"github.com/mclacore/passh/pkg/login"
 	"github.com/spf13/cobra"
 )
-
-type loginItem struct {
-	itemName string
-	username string
-	password string
-	url      string
-}
 
 func NewCmdLogin() *cobra.Command {
 	loginCmd := &cobra.Command{
@@ -22,7 +14,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Create, update, or retreive a login credential",
 	}
 
-	var login loginItem
+	var login LoginItem
 
 	loginNewCmd := &cobra.Command{
 		Use:   "new",
@@ -40,7 +32,7 @@ func NewCmdLogin() *cobra.Command {
 	return loginCmd
 }
 
-func runNewLogin(input *loginItem) error {
+func runNewLogin(input *LoginItem) error {
 	if input.password == "" {
 		input.password = password.GeneratePassword(12, false, true, true, true)
 	}
@@ -52,19 +44,13 @@ func runNewLogin(input *loginItem) error {
 		{input.url},
 	}
 
-	if _, err := os.Stat("temp.csv"); errors.Is(err, os.ErrNotExist) {
-		loginFile, createErr := os.Create("temp.csv")
-		if createErr != nil {
-			return createErr
-		}
-	}
 
-	// add check for if file exists
-	defer loginFile.Close()
+	// loginFile creates the file
+	fmt.Printf("login item: %v\n", loginItem)
+	// loginItem is creating items
+	// loginItems values are not being written to the file
 
-	writer := csv.NewWriter(loginFile)
+	// insert sqlite shit here
 
-	defer writer.Flush()
-
-	return writer.WriteAll(loginItem)
+	return nil
 }
