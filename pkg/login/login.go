@@ -23,7 +23,7 @@ func connectToDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func manageDB() {
+func manageDB(itemName, username, password, url string) {
 	db, err := connectToDB()
 	if err != nil {
 		log.Fatal(err)
@@ -34,15 +34,20 @@ func manageDB() {
 		log.Fatal(err)
 	}
 
-	newLoginItem := &LoginItem{ItemName: "test", Username: "test", Password: "test", URL: "test"}
+	newLoginItem := &LoginItem{
+		ItemName: itemName,
+		Username: username,
+		Password: password,
+		URL:      url,
+	}
 	err = createLoginItem(db, newLoginItem)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Created a new login item:", newLoginItem)
 
-	itemName := newLoginItem.ItemName
-	item, err := getLoginItem(db, itemName)
+	itemID := newLoginItem.ItemName
+	item, err := getLoginItem(db, itemID)
 	if err != nil {
 		log.Fatal(err)
 	}
