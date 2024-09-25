@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
 )
@@ -29,27 +31,27 @@ func NewCmdPass() *cobra.Command {
 func runNewPass(cmd *cobra.Command, args []string) error {
 	length, lenErr := cmd.Flags().GetInt64("length")
 	if lenErr != nil {
-		return lenErr
+		return fmt.Errorf("Error setting password length: %v", lenErr)
 	}
 
 	uppercase, upperErr := cmd.Flags().GetBool("uppercase")
 	if upperErr != nil {
-		return upperErr
+		return fmt.Errorf("Error enabling uppercase chars: %v", upperErr)
 	}
 
 	lowercase, lowerErr := cmd.Flags().GetBool("exclude-lowercase")
 	if lowerErr != nil {
-		return lowerErr
+		return fmt.Errorf("Error excluding lowercase chars: %v", lowerErr)
 	}
 
 	numbers, numErr := cmd.Flags().GetBool("numbers")
 	if numErr != nil {
-		return numErr
+		return fmt.Errorf("Error enabling number chars: %v", numErr)
 	}
 
 	special, specErr := cmd.Flags().GetBool("special")
 	if specErr != nil {
-		return specErr
+		return fmt.Errorf("Error enabling special chars: %v", specErr)
 	}
 
 	password := password.GeneratePassword(length, uppercase, lowercase, numbers, special)
