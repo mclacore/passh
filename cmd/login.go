@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/mclacore/passh/pkg/login"
 	"github.com/spf13/cobra"
@@ -14,43 +12,62 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Create, update, or retreive a login credential",
 	}
 
-	var login LoginItem
-
 	loginNewCmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new login credential",
-		Run:   func(cmd *cobra.Command, args []string) { runNewLogin(&login) },
+		RunE: runNewLogin,
 	}
 
-	loginNewCmd.Flags().StringVarP(&login.itemName, "item-name", "i", "", "Name for the login item")
+	loginNewCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
 	_ = loginNewCmd.MarkFlagRequired("item-name")
-	loginNewCmd.Flags().StringVarP(&login.username, "username", "u", "", "Username for the login credential")
-	loginNewCmd.Flags().StringVarP(&login.password, "password", "p", "", "Password for the login credential")
-	loginNewCmd.Flags().StringVarP(&login.url, "url", "r", "", "URL for the login credential")
+	loginNewCmd.Flags().StringP("username", "u", "", "Username for the login credential")
+	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
+	loginNewCmd.Flags().StringP("url", "r", "", "URL for the login credential")
 
 	loginCmd.AddCommand(loginNewCmd)
 	return loginCmd
 }
 
-func runNewLogin(input *LoginItem) error {
-	if input.password == "" {
-		input.password = password.GeneratePassword(12, false, true, true, true)
+func runNewLogin(cmd *cobra.Command, args []string) error {
+	itemName, itemErr := cmd.Flags().GetString("item-name")
+	if itemErr != nil {
+		return itemErr
 	}
 
-	loginItem := [][]string{
-		{input.itemName},
-		{input.username},
-		{input.password},
-		{input.url},
+	username, userErr := cmd.Flags().GetString("username")
+	if userErr != nil {
+		return userErr
 	}
 
+	loginPass, passErr := cmd.Flags().GetString("password")
+	if passErr != nil {
+		return passErr
+	}
+	if loginPass == "" {
+		loginPass = password.GeneratePassword(12, false, true, true, true)
+	}
 
-	// loginFile creates the file
-	fmt.Printf("login item: %v\n", loginItem)
-	// loginItem is creating items
-	// loginItems values are not being written to the file
+	url, urlErr := cmd.Flags().GetString("url")
+	if urlErr != nil {
+		return urlErr
+	}
 
-	// insert sqlite shit here
+	loginItem := login.LoginItem{
+		LoginItem: itemName,
+		Username: username,
+		Password: loginPass,
+		URL: url,
+	}
+
+	db, dbErr := login.ConnectToDB()
+	if dbErr != nil {
+		return dbErr
+	}
+
+	createErr := login.CreateLoginItem(db, loginItem)
+	if createErr != nil {
+		return createErr
+	}
 
 	return nil
 }
