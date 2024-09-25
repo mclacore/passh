@@ -26,7 +26,16 @@ func NewCmdLogin() *cobra.Command {
 	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
 	loginNewCmd.Flags().StringP("url", "r", "", "URL for the login credential")
 
+	loginGetCmd := &cobra.Command{
+		Use:   "get",
+		Short: "Get login item properties",
+		RunE:   runGetLogin,
+	}
+
+	loginGetCmd.Flags().StringP("item-name", "i", "", "Name of the login item")
+
 	loginCmd.AddCommand(loginNewCmd)
+	loginCmd.AddCommand(loginGetCmd)
 	return loginCmd
 }
 
@@ -70,6 +79,27 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 	if createErr != nil {
 		return fmt.Errorf("Error creating new login item: %v", createErr)
 	}
+
+	return nil
+}
+
+func runGetLogin(cmd *cobra.Command, args []string) error {
+	itemName, itemErr := cmd.Flags().GetString("item-name")
+	if itemErr != nil {
+		return fmt.Errorf("Error setting item-name: %v", itemErr)
+	}
+
+	db, dbErr := login.ConnectToDB()
+	if dbErr != nil {
+		return fmt.Errorf("Error connecting to database: %v", dbErr)
+	}
+
+	getItem, getErr := login.GetLoginItem(db, itemName)
+	if getErr != nil {
+		return fmt.Errorf("Error fetching login item: %v", getErr)
+	}
+
+	cmd.Println(getItem)
 
 	return nil
 }
