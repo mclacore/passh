@@ -35,13 +35,6 @@ func automigrateDB() {
 		log.Fatal(err)
 	}
 
-	// itemID := newLoginItem.ItemName
-	// item, err := getLoginItem(db, itemID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// log.Println("Found login item:", item)
-	//
 	// item.Username = "newUsername"
 	// err = updateLoginItem(db, item)
 	// if err != nil {

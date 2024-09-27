@@ -19,9 +19,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Create a new login credential",
 		RunE:  runNewLogin,
 	}
-
-	loginNewCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
-	_ = loginNewCmd.MarkFlagRequired("item-name")
+	loginNewCmd.MarkFlagRequired("item-name")
 	loginNewCmd.Flags().StringP("username", "u", "", "Username for the login credential")
 	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
 	loginNewCmd.Flags().StringP("url", "r", "", "URL for the login credential")
@@ -29,13 +27,24 @@ func NewCmdLogin() *cobra.Command {
 	loginGetCmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get login item properties",
-		RunE:   runGetLogin,
+		RunE:  runGetLogin,
 	}
+	loginGetCmd.MarkFlagsOneRequired()
 
-	loginGetCmd.Flags().StringP("item-name", "i", "", "Name of the login item")
+	loginUpdateCmd := &cobra.Command{
+		Use:   "update",
+		Short: "Update login item property",
+		RunE:  runUpdateLogin,
+	}
+	loginUpdateCmd.MarkFlagRequired("item-name")
+	loginUpdateCmd.Flags().StringP("username", "u", "", "Username to update")
+	loginUpdateCmd.Flags().StringP("password", "p", "", "Password to update")
+	loginUpdateCmd.Flags().StringP("url", "r", "", "URL to update")
 
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
+	loginCmd.AddCommand(loginUpdateCmd)
+	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
 	return loginCmd
 }
 
@@ -103,6 +112,40 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	cmd.Printf("Username: %v\n", getItem.Username)
 	cmd.Printf("Password: %v\n", getItem.Password)
 	cmd.Printf("URL: %v\n", getItem.URL)
+
+	return nil
+}
+
+func runUpdateLogin(cmd *cobra.Command, args []string) error {
+	itemName, itemErr := cmd.Flags().GetString("item-name")
+	if itemErr != nil {
+		return fmt.Errorf("Error setting item-name: %v", itemErr)
+	}
+
+	db, dbErr := login.ConnectToDB()
+	if dbErr != nil {
+		return fmt.Errorf("Error connecting to database: %v", dbErr)
+	}
+
+	newLoginItem, newLoginErr := login.GetLoginItem(db, itemName)
+	if newLoginErr != nil {
+		return fmt.Errorf("Error fetching login item to update: %v", newLoginErr)
+	}
+
+	if username, userErr := cmd.Flags().GetString("username"); userErr != nil {
+		newLoginItem.Username = username
+	}
+
+	if password, passErr := cmd.Flags().GetString("password"); passErr != nil {
+		newLoginItem.Password = password
+	}
+
+	if url, urlErr := cmd.Flags().GetString("url"); urlErr != nil {
+		newLoginItem.URL = url
+	}
+
+	login.UpdateLoginItem(db, newLoginItem)
+	runGetLogin(cmd, args)
 
 	return nil
 }
