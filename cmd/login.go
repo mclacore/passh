@@ -99,7 +99,10 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error fetching login item: %v", getErr)
 	}
 
-	cmd.Println(getItem)
+	cmd.Printf("Login item: %v\n", getItem.LoginItem)
+	cmd.Printf("Username: %v\n", getItem.Username)
+	cmd.Printf("Password: %v\n", getItem.Password)
+	cmd.Printf("URL: %v\n", getItem.URL)
 
 	return nil
 }

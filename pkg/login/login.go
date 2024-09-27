@@ -67,7 +67,7 @@ func CreateLoginItem(db *gorm.DB, item LoginItem) error {
 
 func GetLoginItem(db *gorm.DB, itemName string) (*LoginItem, error) {
 	var login LoginItem
-	result := db.First(&login, itemName)
+	result := db.Where(&LoginItem{LoginItem: itemName}).Find(&login)
 	if result.Error != nil {
 		return nil, result.Error
 	}

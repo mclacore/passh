@@ -55,8 +55,8 @@ passh login del --item-name Stackoverflow
 <!---
 Setting up collections:
 
-- Collections will be their own database files
-- Database files will need to be stored _somewhere_
+- Collections will be their own tables
+- Database file will need to be stored _somewhere_
 - Need to decrypt on db call, then encrypt after db call
 - Need fast decrypt/encrypt
 - Double encryption on passwords?
