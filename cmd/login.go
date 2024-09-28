@@ -23,13 +23,17 @@ func NewCmdLogin() *cobra.Command {
 	loginNewCmd.Flags().StringP("username", "u", "", "Username for the login credential")
 	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
 	loginNewCmd.Flags().StringP("url", "r", "", "URL for the login credential")
+	loginNewCmd.Flags().Bool("no-password", false, "Do not set a password for login")
 
 	loginGetCmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get login item properties",
 		RunE:  runGetLogin,
 	}
-	loginGetCmd.MarkFlagsOneRequired()
+	loginGetCmd.MarkFlagRequired("item-name")
+	loginGetCmd.Flags().BoolP("show-password", "p", false, "Show password")
+
+	var login login.LoginItem
 
 	loginUpdateCmd := &cobra.Command{
 		Use:   "update",
@@ -37,9 +41,9 @@ func NewCmdLogin() *cobra.Command {
 		RunE:  runUpdateLogin,
 	}
 	loginUpdateCmd.MarkFlagRequired("item-name")
-	loginUpdateCmd.Flags().StringP("username", "u", "", "Username to update")
-	loginUpdateCmd.Flags().StringP("password", "p", "", "Password to update")
-	loginUpdateCmd.Flags().StringP("url", "r", "", "URL to update")
+	loginUpdateCmd.Flags().StringP("username", "u", login.Username, "Username to update")
+	loginUpdateCmd.Flags().StringP("password", "p", login.Password, "Password to update")
+	loginUpdateCmd.Flags().StringP("url", "r", login.URL, "URL to update")
 
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
@@ -63,7 +67,13 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 	if passErr != nil {
 		return fmt.Errorf("Error setting password: %v", passErr)
 	}
-	if loginPass == "" {
+
+	noPass, noPassErr := cmd.Flags().GetBool("no-password")
+	if noPassErr != nil {
+		return fmt.Errorf("Error skipping password: %v", noPassErr)
+	}
+
+	if loginPass == "" && !noPass {
 		loginPass = password.GeneratePassword(12, false, true, true, true)
 	}
 
@@ -108,9 +118,20 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error fetching login item: %v", getErr)
 	}
 
+	showPass, passErr := cmd.Flags().GetBool("show-password")
+	if passErr != nil {
+		return fmt.Errorf("Error showing password: %v", passErr)
+	}
+
 	cmd.Printf("Login item: %v\n", getItem.LoginItem)
 	cmd.Printf("Username: %v\n", getItem.Username)
-	cmd.Printf("Password: %v\n", getItem.Password)
+
+	if showPass {
+		cmd.Printf("Password: %v\n", getItem.Password)
+	} else {
+		cmd.Println("Password: <hidden>")
+	}
+
 	cmd.Printf("URL: %v\n", getItem.URL)
 
 	return nil
@@ -132,15 +153,29 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error fetching login item to update: %v", newLoginErr)
 	}
 
-	if username, userErr := cmd.Flags().GetString("username"); userErr != nil {
+	username, userErr := cmd.Flags().GetString("username")
+	if userErr != nil {
+		return fmt.Errorf("Error updating username: %v", userErr)
+	}
+
+
+	password, passErr := cmd.Flags().GetString("password")
+	if passErr != nil {
+		return fmt.Errorf("Error updating password: %v", passErr)
+	}
+
+	url, urlErr := cmd.Flags().GetString("url")
+	if urlErr != nil {
+		return fmt.Errorf("Error updating URL: %v", urlErr)
+	}
+
+	if len(username) > 0 {
 		newLoginItem.Username = username
 	}
-
-	if password, passErr := cmd.Flags().GetString("password"); passErr != nil {
+	if len(password) > 0 {
 		newLoginItem.Password = password
 	}
-
-	if url, urlErr := cmd.Flags().GetString("url"); urlErr != nil {
+	if len(url) > 0 {
 		newLoginItem.URL = url
 	}
 
