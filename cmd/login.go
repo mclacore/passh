@@ -51,10 +51,19 @@ func NewCmdLogin() *cobra.Command {
 		RunE:  runListLogins,
 	}
 
+	loginDeleteCmd := &cobra.Command{
+		Use:     "delete",
+		Aliases: []string{"del, remove, rm"},
+		Short:   "Delete a login item",
+		RunE:    runDeleteLogin,
+	}
+	loginDeleteCmd.MarkFlagRequired("item-name")
+
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
 	loginCmd.AddCommand(loginUpdateCmd)
 	loginCmd.AddCommand(loginListCmd)
+	loginCmd.AddCommand(loginDeleteCmd)
 	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
 	return loginCmd
 }
@@ -207,5 +216,26 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 	for _, item := range *items {
 		cmd.Println(item.ItemName)
 	}
+	return nil
+}
+
+func runDeleteLogin(cmd *cobra.Command, args []string) error {
+	db, dbErr := login.ConnectToDB()
+	if dbErr != nil {
+		return fmt.Errorf("Error connecting to database: %v", dbErr)
+	}
+
+	itemToDel, itemDelErr := cmd.Flags().GetString("item-name")
+	if itemDelErr != nil {
+		return fmt.Errorf("Error finding item to delete: %v", itemDelErr)
+	}
+
+	delErr := login.DeleteLoginItem(db, itemToDel)
+	if delErr != nil {
+		return fmt.Errorf("Error deleting item: %v", delErr)
+	}
+
+	cmd.Printf("%v has been deleted.\n", itemToDel)
+
 	return nil
 }

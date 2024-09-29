@@ -69,14 +69,6 @@ func UpdateLoginItem(db *gorm.DB, loginItem *LoginItem) error {
 	return nil
 }
 
-func DeleteLoginItem(db *gorm.DB, loginItem *LoginItem) error {
-	result := db.Delete(loginItem)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
-
 func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
 	var loginItems []LoginItem
 
@@ -88,4 +80,12 @@ func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
 	}
 
 	return &loginItems, nil
+}
+
+func DeleteLoginItem(db *gorm.DB, itemName string) error {
+	result := db.Where("item_name = ?", itemName).Delete(&loginItem)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
