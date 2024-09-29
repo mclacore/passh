@@ -230,12 +230,19 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error finding item to delete: %v", itemDelErr)
 	}
 
-	delErr := login.DeleteLoginItem(db, itemToDel)
-	if delErr != nil {
-		return fmt.Errorf("Error deleting item: %v", delErr)
+	confirm, confirmErr := login.ConfirmSoftDelete()
+	if confirmErr != nil {
+		cmd.Printf("Operation cancelled.\n")
+		return nil
 	}
 
-	cmd.Printf("%v has been deleted.\n", itemToDel)
+	if confirm == "y" || confirm == "Y" {
+		delErr := login.DeleteLoginItem(db, itemToDel)
+		if delErr != nil {
+			return fmt.Errorf("Error deleting item: %v", delErr)
+		}
+		cmd.Printf("%v has been deleted.\n", itemToDel)
+	}
 
 	return nil
 }
