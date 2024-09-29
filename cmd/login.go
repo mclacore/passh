@@ -204,6 +204,8 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error fetching login items: %v", itemErr)
 	}
 
-	cmd.Println(items)
+	for _, item := range *items {
+		cmd.Println(item.ItemName)
+	}
 	return nil
 }

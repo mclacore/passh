@@ -15,6 +15,8 @@ type LoginItem struct {
 	URL      string
 }
 
+var loginItem LoginItem
+
 func ConnectToDB() (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
@@ -52,12 +54,11 @@ func CreateLoginItem(db *gorm.DB, item LoginItem) error {
 }
 
 func GetLoginItem(db *gorm.DB, itemName string) (*LoginItem, error) {
-	var login LoginItem
-	result := db.Where(&LoginItem{ItemName: itemName}).Find(&login)
+	result := db.Where(&LoginItem{ItemName: itemName}).Find(&loginItem)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &login, nil
+	return &loginItem, nil
 }
 
 func UpdateLoginItem(db *gorm.DB, loginItem *LoginItem) error {
@@ -78,7 +79,10 @@ func DeleteLoginItem(db *gorm.DB, loginItem *LoginItem) error {
 
 func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
 	var loginItems []LoginItem
-	result := db.Select("item_name").Find(&loginItems)
+
+	result := db.Select("item_name").
+		Order("item_name asc").
+		Find(&loginItems)
 	if result.Error != nil {
 		return nil, result.Error
 	}
