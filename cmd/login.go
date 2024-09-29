@@ -9,6 +9,8 @@ import (
 )
 
 func NewCmdLogin() *cobra.Command {
+	var login login.LoginItem
+
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Create, update, or retreive a login credential",
@@ -33,8 +35,6 @@ func NewCmdLogin() *cobra.Command {
 	loginGetCmd.MarkFlagRequired("item-name")
 	loginGetCmd.Flags().BoolP("show-password", "p", false, "Show password")
 
-	var login login.LoginItem
-
 	loginUpdateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update login item property",
@@ -45,9 +45,16 @@ func NewCmdLogin() *cobra.Command {
 	loginUpdateCmd.Flags().StringP("password", "p", login.Password, "Password to update")
 	loginUpdateCmd.Flags().StringP("url", "r", login.URL, "URL to update")
 
+	loginListCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all login items",
+		RunE:  runListLogins,
+	}
+
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
 	loginCmd.AddCommand(loginUpdateCmd)
+	loginCmd.AddCommand(loginListCmd)
 	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
 	return loginCmd
 }
@@ -83,10 +90,10 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	loginItem := login.LoginItem{
-		LoginItem: itemName,
-		Username:  username,
-		Password:  loginPass,
-		URL:       url,
+		ItemName: itemName,
+		Username: username,
+		Password: loginPass,
+		URL:      url,
 	}
 
 	db, dbErr := login.ConnectToDB()
@@ -123,7 +130,9 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error showing password: %v", passErr)
 	}
 
-	cmd.Printf("Login item: %v\n", getItem.LoginItem)
+	// need to add a for loop here for all listed item-names that match itemName
+
+	cmd.Printf("Item Name: %v\n", getItem.ItemName)
 	cmd.Printf("Username: %v\n", getItem.Username)
 
 	if showPass {
@@ -158,7 +167,6 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error updating username: %v", userErr)
 	}
 
-
 	password, passErr := cmd.Flags().GetString("password")
 	if passErr != nil {
 		return fmt.Errorf("Error updating password: %v", passErr)
@@ -182,5 +190,20 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	login.UpdateLoginItem(db, newLoginItem)
 	runGetLogin(cmd, args)
 
+	return nil
+}
+
+func runListLogins(cmd *cobra.Command, args []string) error {
+	db, dbErr := login.ConnectToDB()
+	if dbErr != nil {
+		return fmt.Errorf("Error connecting to database: %v", dbErr)
+	}
+
+	items, itemErr := login.ListLoginItems(db)
+	if itemErr != nil {
+		return fmt.Errorf("Error fetching login items: %v", itemErr)
+	}
+
+	cmd.Println(items)
 	return nil
 }
