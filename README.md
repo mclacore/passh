@@ -27,6 +27,11 @@ Create a new login (with generated password):
 passh login new --item-name Stackoverflow --username mclacore --url https://stackoverflow.com
 ```
 
+Create a new login with no password:
+```bash
+passh login new --item-name Stackoverflow --username mclacore --url https://stackoverflow.com --no-password
+```
+
 List all logins:
 ```bash
 passh login list
@@ -49,7 +54,7 @@ passh login update --item-name Stackoverflow --password 654321
 
 Delete a login:
 ```bash
-passh login del --item-name Stackoverflow
+passh login delete --item-name Stackoverflow
 ```
 
 <!---
