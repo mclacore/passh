@@ -9,10 +9,10 @@ import (
 
 type LoginItem struct {
 	gorm.Model
-	LoginItem string
-	Username  string
-	Password  string
-	URL       string
+	ItemName string `gorm:"unique"`
+	Username string
+	Password string
+	URL      string
 }
 
 func ConnectToDB() (*gorm.DB, error) {
@@ -35,13 +35,6 @@ func automigrateDB() {
 		log.Fatal(err)
 	}
 
-	// item.Username = "newUsername"
-	// err = updateLoginItem(db, item)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// log.Println("Updated login item:", item)
-	//
 	// err = deleteLoginItem(db, item)
 	// if err != nil {
 	// 	log.Fatal(err)
@@ -60,7 +53,7 @@ func CreateLoginItem(db *gorm.DB, item LoginItem) error {
 
 func GetLoginItem(db *gorm.DB, itemName string) (*LoginItem, error) {
 	var login LoginItem
-	result := db.Where(&LoginItem{LoginItem: itemName}).Find(&login)
+	result := db.Where(&LoginItem{ItemName: itemName}).Find(&login)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -81,4 +74,14 @@ func DeleteLoginItem(db *gorm.DB, loginItem *LoginItem) error {
 		return result.Error
 	}
 	return nil
+}
+
+func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
+	var loginItems []LoginItem
+	result := db.Select("item_name").Find(&loginItems)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &loginItems, nil
 }
