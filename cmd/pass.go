@@ -19,10 +19,10 @@ func NewCmdPass() *cobra.Command {
 		RunE:  runNewPass,
 	}
 	passNewCmd.Flags().Int64P("length", "l", 12, "Length of the password")
-	passNewCmd.Flags().BoolP("uppercase", "u", false, "Include uppercase characters")
+	passNewCmd.Flags().BoolP("uppercase", "u", false, "Include uppercase characters") // should be set to true
 	passNewCmd.Flags().BoolP("exclude-lowercase", "x", false, "EXCLUDE lowercase characters")
-	passNewCmd.Flags().BoolP("numbers", "n", false, "Include numbers")
-	passNewCmd.Flags().BoolP("special", "s", false, "Include special characters")
+	passNewCmd.Flags().BoolP("numbers", "n", false, "Include numbers") // should be set to true
+	passNewCmd.Flags().BoolP("special", "s", false, "Include special characters") // should be set to true
 
 	passCmd.AddCommand(passNewCmd)
 	return passCmd
