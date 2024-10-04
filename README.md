@@ -12,11 +12,13 @@ go install github.com/mclacore/passh@latest
 
 ## Usage
 
+### Password
 Generate a new password:
 ```bash
 passh pass new
 ```
 
+### Login
 Create a new login (with specific password):
 ```bash
 passh login new --item-name Stackoverflow --username mclacore --password 123456 --url https://stackoverflow.com
@@ -57,37 +59,34 @@ Delete a login:
 passh login delete --item-name Stackoverflow
 ```
 
-<!---
-Setting up collections:
-
-- Collections will be their own tables
-- Database file will need to be stored _somewhere_
-- Need to decrypt on db call, then encrypt after db call
-- Need fast decrypt/encrypt
-- Double encryption on passwords?
-
-# Create new collection
+### Collection
+Create new collection
 ```bash
-passh collection (col) new --name/n colName
+passh collection new --collection-name Work
 ```
 
-# List collections
+List collections
 ```bash
 passh collection list
 ```
 
-# Get login items in collection
+Delete collection
 ```bash
-passh login list --collection/c colName
+passh collection delete --collection-name Work
 ```
+<!---
+TODO:
 
-# Migrate item from 1 collection to another
-# Perfoms:
-1. Get login item
-2. Create login item in newColName
-3. Verify login item in newColName
-4. Delete login item in oldColName
+- Need to decrypt on db call, then encrypt after db call
+- Need fast decrypt/encrypt
+- Double encryption on passwords?
+- Iterate through itemNames when doing a GET and list all matching items
+- Add collection argument to login
+- Create a default collection for initial login items
+- Move login items to another collection
+
+Move login item to another collection
 ```bash
-passh login migrate --from-collection/f oldColName --to-collection/t newColName
+passh login move --from-collection Personal --to-collection Work
 ```
 -->
