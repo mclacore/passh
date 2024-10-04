@@ -27,12 +27,6 @@ func automigrateDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// err = deleteLoginItem(db, item)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// log.Println("Deleted login item:", item)
 }
 
 func CreateLoginItem(db *gorm.DB, item LoginItem) error {

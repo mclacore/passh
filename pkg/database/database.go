@@ -48,7 +48,7 @@ func setPath() (string, error) {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}
 	} else {
-		localPath = `~/.local/share/passh/`
+		localPath = `$HOME/.local/share/passh/`
 		if dirErr := os.MkdirAll(`~/.local/share/passh`, os.ModePerm); dirErr != nil {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}

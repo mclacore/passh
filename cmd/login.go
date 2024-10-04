@@ -6,6 +6,7 @@ import (
 	"github.com/mclacore/passh/pkg/login"
 	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/password"
+	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -231,7 +232,7 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error finding item to delete: %v", itemDelErr)
 	}
 
-	confirm, confirmErr := login.ConfirmSoftDelete()
+	confirm, confirmErr := prompt.ConfirmItemDelete()
 	if confirmErr != nil {
 		cmd.Printf("Operation cancelled.\n")
 		return nil
