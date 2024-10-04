@@ -3,13 +3,13 @@ package login
 import (
 	"log"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"github.com/mclacore/pkg/database"
 )
 
 type LoginItem struct {
 	gorm.Model
-	ItemName string `gorm:"unique"`
+	ItemName string
 	Username string
 	Password string
 	URL      string
@@ -17,17 +17,8 @@ type LoginItem struct {
 
 var loginItem LoginItem
 
-func ConnectToDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
 func automigrateDB() {
-	db, err := ConnectToDB()
+	db, err := database.ConnectToDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,6 +63,7 @@ func UpdateLoginItem(db *gorm.DB, loginItem *LoginItem) error {
 func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
 	var loginItems []LoginItem
 
+	// add listing by item-name
 	result := db.Select("item_name").
 		Order("item_name asc").
 		Find(&loginItems)
