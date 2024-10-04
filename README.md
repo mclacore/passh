@@ -2,7 +2,7 @@
 
 ![Passh logo](./assets/logo-no-background.png)
 
-**Pass** is an open-source password manager written in Go. It uses the `pass` command line tool to easily store and retreive your passwords.
+**Passh** is an open-source password manager written in Go. It uses the `passh` command line tool to easily store and retreive your passwords.
 
 ## Installation
 
