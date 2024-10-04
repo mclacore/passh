@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"gorm.io/gorm"
-	"github.com/mclacore/pkg/database"
+	"github.com/mclacore/passh/pkg/database"
 )
 
 type LoginItem struct {
