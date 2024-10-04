@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mclacore/passh/pkg/login"
+	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
 )
@@ -105,7 +106,7 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 		URL:      url,
 	}
 
-	db, dbErr := login.ConnectToDB()
+	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %V", dbErr)
 	}
@@ -124,7 +125,7 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error setting item-name: %v", itemErr)
 	}
 
-	db, dbErr := login.ConnectToDB()
+	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
@@ -161,7 +162,7 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error setting item-name: %v", itemErr)
 	}
 
-	db, dbErr := login.ConnectToDB()
+	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
@@ -203,7 +204,7 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 }
 
 func runListLogins(cmd *cobra.Command, args []string) error {
-	db, dbErr := login.ConnectToDB()
+	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
@@ -220,7 +221,7 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 }
 
 func runDeleteLogin(cmd *cobra.Command, args []string) error {
-	db, dbErr := login.ConnectToDB()
+	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
