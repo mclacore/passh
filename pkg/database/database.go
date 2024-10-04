@@ -12,7 +12,10 @@ import (
 )
 
 func ConnectToDB() (*gorm.DB, error) {
-	osPath := setPath()
+	osPath, pathErr := setPath()
+	if pathErr != nil {
+		return nil, pathErr
+	}
 
 	dbName, nameErr := makeDBName()
 	if nameErr != nil {
@@ -20,6 +23,14 @@ func ConnectToDB() (*gorm.DB, error) {
 	}
 
 	dbPath := osPath + dbName
+
+	if _, err := os.Stat(dbPath); err != nil {
+		dbFile, fileErr := os.Create(dbPath)
+		if fileErr != nil {
+			return nil, fmt.Errorf("cannot create database: %w", fileErr)
+		}
+		defer dbFile.Close()
+	}
 
 	db, dbErr := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if dbErr != nil {
@@ -29,14 +40,20 @@ func ConnectToDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func setPath() string {
+func setPath() (string, error) {
 	localPath := ""
 	if runtime.GOOS == "windows" {
-		localPath = `%LOCALAPPDATA%\passh`
+		localPath = `%LOCALAPPDATA%\passh\`
+		if dirErr := os.MkdirAll(`%LOCALAPPDATA%\passh\`, os.ModePerm); dirErr != nil {
+			return "", fmt.Errorf("could not create directory: %w", dirErr)
+		}
 	} else {
-		localPath = `~/.local/share/passh`
+		localPath = `~/.local/share/passh/`
+		if dirErr := os.MkdirAll(`~/.local/share/passh`, os.ModePerm); dirErr != nil {
+			return "", fmt.Errorf("could not create directory: %w", dirErr)
+		}
 	}
-	return localPath
+	return localPath, nil
 }
 
 func makeDBName() (string, error) {
@@ -47,7 +64,7 @@ func makeDBName() (string, error) {
 
 	hash := sha1.New()
 	hash.Write([]byte(homeDir))
-	sha1Hash := hex.EncodeToString(hash.Sum(nil))
+	dbName := hex.EncodeToString(hash.Sum(nil)) + ".db"
 
-	return sha1Hash, nil
+	return dbName, nil
 }
