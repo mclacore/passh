@@ -21,17 +21,25 @@ passh pass new
 ### Login
 Create a new login (with specific password):
 ```bash
-passh login new --item-name Stackoverflow --username mclacore --password 123456 --url https://stackoverflow.com
+passh login new --item-name Stackoverflow \
+    --username mclacore \
+    --password 123456 \
+    --url https://stackoverflow.com
 ```
 
 Create a new login (with generated password):
 ```bash
-passh login new --item-name Stackoverflow --username mclacore --url https://stackoverflow.com
+passh login new --item-name Stackoverflow \
+    --username mclacore \
+    --url https://stackoverflow.com
 ```
 
 Create a new login with no password:
 ```bash
-passh login new --item-name Stackoverflow --username mclacore --url https://stackoverflow.com --no-password
+passh login new --item-name Stackoverflow \
+    --username mclacore \
+    --url https://stackoverflow.com \
+    --no-password
 ```
 
 List all logins:
