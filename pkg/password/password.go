@@ -5,23 +5,27 @@ import (
 	"math/rand"
 )
 
-func GeneratePassword(length int64, lowercase, uppercase, numbers, special bool) string {
-	charset := ""
+func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) string {
+	charset := []byte("")
+	lower := []byte("abcdefghijklmnopqrstuvwxyz")
+	upper := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	digits := []byte("0123456789")
+	specials := []byte("!@#$%^&*()_+~><")
 
 	if !lowercase {
-		charset += "abcdefghijklmnopqrstuvwxyz"
+		charset = append(charset, lower...)
 	}
 
 	if uppercase {
-		charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		charset = append(charset, upper...)
 	}
 
 	if numbers {
-		charset += "0123456789"
+		charset = append(charset, digits...)
 	}
 
 	if special {
-		charset += "!@#$%^&*()_+~><"
+		charset = append(charset, specials...)
 	}
 
 	password := make([]byte, length)
@@ -32,7 +36,7 @@ func GeneratePassword(length int64, lowercase, uppercase, numbers, special bool)
 		password[i] = charset[rand.Intn(len(charset))]
 	}
 
-	fmt.Println(charset)
+	fmt.Println(string(charset))
 
 	return string(password)
 }

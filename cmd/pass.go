@@ -21,15 +21,15 @@ func NewCmdPass() *cobra.Command {
 	passNewCmd.Flags().Int64P("length", "l", 12, "Length of the password")
 	passNewCmd.Flags().BoolP("uppercase", "u", false, "Include uppercase characters") // should be set to true
 	passNewCmd.Flags().BoolP("exclude-lowercase", "x", false, "EXCLUDE lowercase characters")
-	passNewCmd.Flags().BoolP("numbers", "n", false, "Include numbers") // should be set to true
-	passNewCmd.Flags().BoolP("special", "s", false, "Include special characters") // should be set to true
+	passNewCmd.Flags().BoolP("numbers", "n", true, "Include numbers") // should be set to true
+	passNewCmd.Flags().BoolP("special", "s", true, "Include special characters") // should be set to true
 
 	passCmd.AddCommand(passNewCmd)
 	return passCmd
 }
 
 func runNewPass(cmd *cobra.Command, args []string) error {
-	length, lenErr := cmd.Flags().GetInt64("length")
+	length, lenErr := cmd.Flags().GetInt("length")
 	if lenErr != nil {
 		return fmt.Errorf("Error setting password length: %v", lenErr)
 	}

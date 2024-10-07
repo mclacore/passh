@@ -123,6 +123,8 @@ TODO:
 - Add collection argument to login
 - Create a default collection for initial login items
 - Move login items to another collection
+- Set up SSH server
+- Set up docker image
 
 Move login item to another collection
 ```bash
