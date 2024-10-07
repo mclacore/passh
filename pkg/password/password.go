@@ -1,7 +1,6 @@
 package password
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -35,8 +34,6 @@ func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) s
 		// is setting the charset to lowercase + uppercase
 		password[i] = charset[rand.Intn(len(charset))]
 	}
-
-	fmt.Println(string(charset))
 
 	return string(password)
 }

@@ -18,11 +18,11 @@ func NewCmdPass() *cobra.Command {
 		Short: "Generate a new password",
 		RunE:  runNewPass,
 	}
-	passNewCmd.Flags().Int64P("length", "l", 12, "Length of the password")
-	passNewCmd.Flags().BoolP("uppercase", "u", false, "Include uppercase characters") // should be set to true
+	passNewCmd.Flags().IntP("length", "l", 12, "Length of the password")
 	passNewCmd.Flags().BoolP("exclude-lowercase", "x", false, "EXCLUDE lowercase characters")
-	passNewCmd.Flags().BoolP("numbers", "n", true, "Include numbers") // should be set to true
-	passNewCmd.Flags().BoolP("special", "s", true, "Include special characters") // should be set to true
+	passNewCmd.Flags().BoolP("uppercase", "u", true, "Include uppercase characters")
+	passNewCmd.Flags().BoolP("numbers", "n", true, "Include numbers")
+	passNewCmd.Flags().BoolP("special", "s", true, "Include special characters")
 
 	passCmd.AddCommand(passNewCmd)
 	return passCmd
@@ -54,7 +54,7 @@ func runNewPass(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error enabling special chars: %v", specErr)
 	}
 
-	password := password.GeneratePassword(length, uppercase, lowercase, numbers, special)
+	password := password.GeneratePassword(length, lowercase, uppercase, numbers, special)
 
 	cmd.Println(password)
 
