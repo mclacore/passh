@@ -35,6 +35,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	rootCmd.AddCommand(NewCmdPass())
 	rootCmd.AddCommand(NewCmdLogin())
+	rootCmd.AddCommand(NewCmdCollection())
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

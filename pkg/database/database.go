@@ -27,7 +27,7 @@ func ConnectToDB() (*gorm.DB, error) {
 	if _, err := os.Stat(dbPath); err != nil {
 		dbFile, fileErr := os.Create(dbPath)
 		if fileErr != nil {
-			return nil, fmt.Errorf("cannot create database: %w", fileErr)
+			return nil, fmt.Errorf("cannot create database file: %w", fileErr)
 		}
 		defer dbFile.Close()
 	}
@@ -41,15 +41,21 @@ func ConnectToDB() (*gorm.DB, error) {
 }
 
 func setPath() (string, error) {
-	localPath := ""
+	var localPath string
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("cannot set home directory: %w", err)
+	}
+
 	if runtime.GOOS == "windows" {
-		localPath = `%LOCALAPPDATA%\passh\`
-		if dirErr := os.MkdirAll(`%LOCALAPPDATA%\passh\`, os.ModePerm); dirErr != nil {
+		localPath = fmt.Sprintf("%v/passh/bin/data/", homeDir)
+		if dirErr := os.MkdirAll(localPath, os.ModePerm); dirErr != nil {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}
 	} else {
-		localPath = `$HOME/.local/share/passh/`
-		if dirErr := os.MkdirAll(`~/.local/share/passh`, os.ModePerm); dirErr != nil {
+		localPath = fmt.Sprintf("%v/.local/share/passh/bin/data/", homeDir)
+		if dirErr := os.MkdirAll(localPath, os.ModePerm); dirErr != nil {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}
 	}
@@ -59,7 +65,7 @@ func setPath() (string, error) {
 func makeDBName() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("cannot set home directory: %w", err)
+		return "", fmt.Errorf("cannot get home directory: %w", err)
 	}
 
 	hash := sha1.New()

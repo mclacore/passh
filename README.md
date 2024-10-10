@@ -116,13 +116,16 @@ passh collection delete --collection-name Work
 <!---
 TODO:
 
+- Fix db file creation/name hashing
+- Create a way to look for passh files by revershing hash method
+- Finish setting up collection table
+- Add collection argument to login
+- Create a default collection for initial login items
+- Move login items to another collection
 - Need to decrypt on db call, then encrypt after db call
 - Need fast decrypt/encrypt
 - Double encryption on passwords?
 - Iterate through itemNames when doing a GET and list all matching items
-- Add collection argument to login
-- Create a default collection for initial login items
-- Move login items to another collection
 - Set up SSH server
 - Set up docker image
 

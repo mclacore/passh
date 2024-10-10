@@ -67,6 +67,7 @@ func NewCmdLogin() *cobra.Command {
 	loginCmd.AddCommand(loginListCmd)
 	loginCmd.AddCommand(loginDeleteCmd)
 	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
+	loginCmd.PersistentFlags().StringP("collection-name", "c", "", "Name for the login collection")
 	return loginCmd
 }
 

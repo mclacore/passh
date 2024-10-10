@@ -21,8 +21,8 @@ func NewCmdCollection() *cobra.Command {
 		Short: "Create a new login collection",
 		RunE:  runNewCollection,
 	}
-	colNewCmd.MarkPersistentFlagRequired("collection-name")
-	colNewCmd.PersistentFlags().StringP("collection-name", "c", "", "Name for the collection")
+	colNewCmd.MarkFlagRequired("collection-name")
+	colNewCmd.Flags().StringP("collection-name", "n", "", "Name for the collection")
 
 	colListCmd := &cobra.Command{
 		Use:   "list",
@@ -36,6 +36,8 @@ func NewCmdCollection() *cobra.Command {
 		Short:   "Delete a collection (and ALL LOGIN ITEMS IN IT)",
 		RunE:    runDeleteCollection,
 	}
+	colDelCmd.MarkFlagRequired("collection-name")
+	colDelCmd.Flags().StringP("collection-name", "n", "", "Name for the collection")
 
 	colCmd.AddCommand(colNewCmd)
 	colCmd.AddCommand(colListCmd)
@@ -50,7 +52,7 @@ func runNewCollection(cmd *cobra.Command, args []string) error {
 	}
 
 	collection := col.Collection{
-		ColName: colName,
+		Name: colName,
 	}
 
 	db, dbErr := database.ConnectToDB()
@@ -77,7 +79,7 @@ func runListCollections(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, col := range *cols {
-		cmd.Println(col.ColName)
+		cmd.Println(col.Name)
 	}
 	return nil
 }
@@ -86,7 +88,7 @@ func runDeleteCollection(cmd *cobra.Command, args []string) error {
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
-	}	
+	}
 
 	colToDel, colDelErr := cmd.Flags().GetString("collection-name")
 	if colDelErr != nil {

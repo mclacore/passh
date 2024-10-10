@@ -9,7 +9,7 @@ import (
 
 type Collection struct {
 	gorm.Model
-	ColName string `gorm:"unique"`
+	Name string
 }
 
 var collection Collection
@@ -36,7 +36,7 @@ func CreateCollection(db *gorm.DB, col Collection) error {
 }
 
 func GetCollection(db *gorm.DB, colName string) (*Collection, error) {
-	result := db.Where(&Collection{ColName: colName}).Find(&collection)
+	result := db.Where(&Collection{Name: colName}).Find(&collection)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -46,8 +46,8 @@ func GetCollection(db *gorm.DB, colName string) (*Collection, error) {
 func ListCollections(db *gorm.DB) (*[]Collection, error) {
 	var collections []Collection
 
-	result := db.Select("col_name").
-		Order("col_name asc").
+	result := db.Select("name").
+		Order("name asc").
 		Find(&collection)
 	if result.Error != nil {
 		return nil, result.Error
@@ -56,8 +56,7 @@ func ListCollections(db *gorm.DB) (*[]Collection, error) {
 }
 
 func DeleteCollection(db *gorm.DB, colName string) error {
-	// need to loop through all items in collection first, delete them all, then delete collection
-	result := db.Where("col_name = ?", colName).Delete(&collection)
+	result := db.Where("name = ?", colName).Delete(&collection)
 	if result.Error != nil {
 		return result.Error
 	}
