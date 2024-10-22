@@ -21,8 +21,8 @@ func NewCmdCollection() *cobra.Command {
 		Short: "Create a new login collection",
 		RunE:  runNewCollection,
 	}
+	colNewCmd.Flags().StringP("collection-name", "c", "", "Name for the collection")
 	colNewCmd.MarkFlagRequired("collection-name")
-	colNewCmd.Flags().StringP("collection-name", "n", "", "Name for the collection")
 
 	colListCmd := &cobra.Command{
 		Use:   "list",
@@ -36,8 +36,8 @@ func NewCmdCollection() *cobra.Command {
 		Short:   "Delete a collection (and ALL LOGIN ITEMS IN IT)",
 		RunE:    runDeleteCollection,
 	}
+	colDelCmd.Flags().StringP("collection-name", "c", "", "Name for the collection")
 	colDelCmd.MarkFlagRequired("collection-name")
-	colDelCmd.Flags().StringP("collection-name", "n", "", "Name for the collection")
 
 	colCmd.AddCommand(colNewCmd)
 	colCmd.AddCommand(colListCmd)
@@ -79,7 +79,9 @@ func runListCollections(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, col := range *cols {
-		cmd.Println(col.Name)
+		fmt.Printf("col: %v\n", col)
+		fmt.Printf("colanme: %v\n", col.Name)
+		cmd.Println(col)
 	}
 	return nil
 }

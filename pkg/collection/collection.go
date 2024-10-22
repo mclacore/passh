@@ -9,7 +9,7 @@ import (
 
 type Collection struct {
 	gorm.Model
-	Name string
+	Name string `gorm:"unique"`
 }
 
 var collection Collection
@@ -47,7 +47,7 @@ func ListCollections(db *gorm.DB) (*[]Collection, error) {
 	var collections []Collection
 
 	result := db.Select("name").
-		Order("name asc").
+		Order("name ASC").
 		Find(&collection)
 	if result.Error != nil {
 		return nil, result.Error

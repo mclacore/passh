@@ -49,12 +49,12 @@ func setPath() (string, error) {
 	}
 
 	if runtime.GOOS == "windows" {
-		localPath = fmt.Sprintf("%v/passh/bin/data/", homeDir)
+		localPath = fmt.Sprintf("%v/passh/data/", homeDir)
 		if dirErr := os.MkdirAll(localPath, os.ModePerm); dirErr != nil {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}
 	} else {
-		localPath = fmt.Sprintf("%v/.local/share/passh/bin/data/", homeDir)
+		localPath = fmt.Sprintf("%v/.local/share/passh/data/", homeDir)
 		if dirErr := os.MkdirAll(localPath, os.ModePerm); dirErr != nil {
 			return "", fmt.Errorf("could not create directory: %w", dirErr)
 		}
