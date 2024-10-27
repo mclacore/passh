@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	col "github.com/mclacore/passh/pkg/collection"
+	"github.com/mclacore/passh/pkg/collection"
 	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
@@ -51,7 +51,7 @@ func runNewCollection(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error setting collection-name: %w", nameErr)
 	}
 
-	collection := col.Collection{
+	newCol := collection.Collection{
 		Name: colName,
 	}
 
@@ -60,7 +60,7 @@ func runNewCollection(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %V", dbErr)
 	}
 
-	createErr := col.CreateCollection(db, collection)
+	createErr := collection.CreateCollection(db, newCol)
 	if createErr != nil {
 		return fmt.Errorf("Error creating new collection: %w", createErr)
 	}
@@ -73,15 +73,13 @@ func runListCollections(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
 
-	cols, colErr := col.ListCollections(db)
+	cols, colErr := collection.ListCollections(db)
 	if colErr != nil {
 		return fmt.Errorf("Error fetching collections: %w", colErr)
 	}
 
 	for _, col := range *cols {
-		fmt.Printf("col: %v\n", col)
-		fmt.Printf("colanme: %v\n", col.Name)
-		cmd.Println(col)
+		cmd.Println(col.Name)
 	}
 	return nil
 }
@@ -104,7 +102,7 @@ func runDeleteCollection(cmd *cobra.Command, args []string) error {
 	}
 
 	if confirm == "y" || confirm == "Y" {
-		delErr := col.DeleteCollection(db, colToDel)
+		delErr := collection.DeleteCollection(db, colToDel)
 		if delErr != nil {
 			return fmt.Errorf("Error deleting collection: %w", delErr)
 		}

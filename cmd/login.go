@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mclacore/passh/pkg/login"
 	"github.com/mclacore/passh/pkg/database"
+	"github.com/mclacore/passh/pkg/login"
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
@@ -23,6 +23,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Create a new login credential",
 		RunE:  runNewLogin,
 	}
+	loginNewCmd.MarkFlagRequired("collection-name")
 	loginNewCmd.MarkFlagRequired("item-name")
 	loginNewCmd.Flags().StringP("username", "u", "", "Username for the login credential")
 	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
@@ -34,6 +35,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Get login item properties",
 		RunE:  runGetLogin,
 	}
+	loginGetCmd.MarkFlagRequired("collection-name")
 	loginGetCmd.MarkFlagRequired("item-name")
 	loginGetCmd.Flags().BoolP("show-password", "p", false, "Show password")
 
@@ -42,6 +44,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Update login item property",
 		RunE:  runUpdateLogin,
 	}
+	loginUpdateCmd.MarkFlagRequired("collection-name")
 	loginUpdateCmd.MarkFlagRequired("item-name")
 	loginUpdateCmd.Flags().StringP("username", "u", login.Username, "Username to update")
 	loginUpdateCmd.Flags().StringP("password", "p", login.Password, "Password to update")
@@ -52,6 +55,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "List all login items",
 		RunE:  runListLogins,
 	}
+	loginListCmd.MarkFlagRequired("collection-name")
 
 	loginDeleteCmd := &cobra.Command{
 		Use:     "delete",
@@ -60,6 +64,7 @@ func NewCmdLogin() *cobra.Command {
 		RunE:    runDeleteLogin,
 	}
 	loginDeleteCmd.MarkFlagRequired("item-name")
+	loginDeleteCmd.MarkFlagRequired("collection-name")
 
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
@@ -132,6 +137,7 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
 
+	// need to do collection checking here
 	getItem, getErr := login.GetLoginItem(db, itemName)
 	if getErr != nil {
 		return fmt.Errorf("Error fetching login item: %v", getErr)
@@ -211,6 +217,7 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %v", dbErr)
 	}
 
+	// need to be able to filter specifically from collections here
 	items, itemErr := login.ListLoginItems(db)
 	if itemErr != nil {
 		return fmt.Errorf("Error fetching login items: %v", itemErr)
