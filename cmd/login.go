@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/mclacore/passh/pkg/collection"
 	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/login"
 	"github.com/mclacore/passh/pkg/password"
@@ -72,29 +73,29 @@ func NewCmdLogin() *cobra.Command {
 	loginCmd.AddCommand(loginListCmd)
 	loginCmd.AddCommand(loginDeleteCmd)
 	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
-	loginCmd.PersistentFlags().StringP("collection-name", "c", "", "Name for the login collection")
+	loginCmd.PersistentFlags().StringP("collection-name", "c", "default", "Name for the login collection")
 	return loginCmd
 }
 
 func runNewLogin(cmd *cobra.Command, args []string) error {
 	itemName, itemErr := cmd.Flags().GetString("item-name")
 	if itemErr != nil {
-		return fmt.Errorf("Error setting item-name: %v", itemErr)
+		return fmt.Errorf("Error setting item-name: %w", itemErr)
 	}
 
 	username, userErr := cmd.Flags().GetString("username")
 	if userErr != nil {
-		return fmt.Errorf("Error setting username: %v", userErr)
+		return fmt.Errorf("Error setting username: %w", userErr)
 	}
 
 	loginPass, passErr := cmd.Flags().GetString("password")
 	if passErr != nil {
-		return fmt.Errorf("Error setting password: %v", passErr)
+		return fmt.Errorf("Error setting password: %w", passErr)
 	}
 
 	noPass, noPassErr := cmd.Flags().GetBool("no-password")
 	if noPassErr != nil {
-		return fmt.Errorf("Error skipping password: %v", noPassErr)
+		return fmt.Errorf("Error skipping password: %w", noPassErr)
 	}
 
 	if loginPass == "" && !noPass {
@@ -103,24 +104,45 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 
 	url, urlErr := cmd.Flags().GetString("url")
 	if urlErr != nil {
-		return fmt.Errorf("Error setting URL: %v", urlErr)
+		return fmt.Errorf("Error setting URL: %w", urlErr)
 	}
 
-	loginItem := login.LoginItem{
-		ItemName: itemName,
-		Username: username,
-		Password: loginPass,
-		URL:      url,
+	col, colErr := cmd.Flags().GetString("collection-name")
+	if col == "" {
+		col = "default"
+	}
+	if colErr != nil {
+		return fmt.Errorf("Error setting collection: %w", colErr)
 	}
 
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
-		return fmt.Errorf("Error connecting to database: %V", dbErr)
+		return fmt.Errorf("Error connecting to database: %w", dbErr)
+	}
+
+	colId, colIdErr := collection.GetCollection(db, col)
+	if colId == nil {
+		defCol := collection.Collection{
+			Name: "default",
+		}
+		collection.CreateCollection(db, defCol)
+		colId, colIdErr = collection.GetCollection(db, "default")
+	}
+	if colIdErr != nil {
+		return fmt.Errorf("Error getting collection id: %w", colIdErr)
+	}
+
+	loginItem := login.LoginItem{
+		ItemName:     itemName,
+		Username:     username,
+		Password:     loginPass,
+		URL:          url,
+		CollectionID: int(colId.ID),
 	}
 
 	createErr := login.CreateLoginItem(db, loginItem)
 	if createErr != nil {
-		return fmt.Errorf("Error creating new login item: %v", createErr)
+		return fmt.Errorf("Error creating new login item: %w", createErr)
 	}
 
 	return nil
@@ -129,23 +151,23 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 func runGetLogin(cmd *cobra.Command, args []string) error {
 	itemName, itemErr := cmd.Flags().GetString("item-name")
 	if itemErr != nil {
-		return fmt.Errorf("Error setting item-name: %v", itemErr)
+		return fmt.Errorf("Error setting item-name: %w", itemErr)
 	}
 
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
-		return fmt.Errorf("Error connecting to database: %v", dbErr)
+		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
 	// need to do collection checking here
 	getItem, getErr := login.GetLoginItem(db, itemName)
 	if getErr != nil {
-		return fmt.Errorf("Error fetching login item: %v", getErr)
+		return fmt.Errorf("Error fetching login item: %w", getErr)
 	}
 
 	showPass, passErr := cmd.Flags().GetBool("show-password")
 	if passErr != nil {
-		return fmt.Errorf("Error showing password: %v", passErr)
+		return fmt.Errorf("Error showing password: %w", passErr)
 	}
 
 	// need to add a for loop here for all listed item-names that match itemName
@@ -167,32 +189,32 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	itemName, itemErr := cmd.Flags().GetString("item-name")
 	if itemErr != nil {
-		return fmt.Errorf("Error setting item-name: %v", itemErr)
+		return fmt.Errorf("Error setting item-name: %w", itemErr)
 	}
 
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
-		return fmt.Errorf("Error connecting to database: %v", dbErr)
+		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
 	newLoginItem, newLoginErr := login.GetLoginItem(db, itemName)
 	if newLoginErr != nil {
-		return fmt.Errorf("Error fetching login item to update: %v", newLoginErr)
+		return fmt.Errorf("Error fetching login item to update: %w", newLoginErr)
 	}
 
 	username, userErr := cmd.Flags().GetString("username")
 	if userErr != nil {
-		return fmt.Errorf("Error updating username: %v", userErr)
+		return fmt.Errorf("Error updating username: %w", userErr)
 	}
 
 	password, passErr := cmd.Flags().GetString("password")
 	if passErr != nil {
-		return fmt.Errorf("Error updating password: %v", passErr)
+		return fmt.Errorf("Error updating password: %w", passErr)
 	}
 
 	url, urlErr := cmd.Flags().GetString("url")
 	if urlErr != nil {
-		return fmt.Errorf("Error updating URL: %v", urlErr)
+		return fmt.Errorf("Error updating URL: %w", urlErr)
 	}
 
 	if len(username) > 0 {
@@ -214,13 +236,13 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 func runListLogins(cmd *cobra.Command, args []string) error {
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
-		return fmt.Errorf("Error connecting to database: %v", dbErr)
+		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
 	// need to be able to filter specifically from collections here
 	items, itemErr := login.ListLoginItems(db)
 	if itemErr != nil {
-		return fmt.Errorf("Error fetching login items: %v", itemErr)
+		return fmt.Errorf("Error fetching login items: %w", itemErr)
 	}
 
 	for _, item := range *items {
@@ -232,12 +254,12 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 func runDeleteLogin(cmd *cobra.Command, args []string) error {
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
-		return fmt.Errorf("Error connecting to database: %v", dbErr)
+		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
 	itemToDel, itemDelErr := cmd.Flags().GetString("item-name")
 	if itemDelErr != nil {
-		return fmt.Errorf("Error finding item to delete: %v", itemDelErr)
+		return fmt.Errorf("Error finding item to delete: %w", itemDelErr)
 	}
 
 	confirm, confirmErr := prompt.ConfirmItemDelete()
@@ -249,7 +271,7 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 	if confirm == "y" || confirm == "Y" {
 		delErr := login.DeleteLoginItem(db, itemToDel)
 		if delErr != nil {
-			return fmt.Errorf("Error deleting item: %v", delErr)
+			return fmt.Errorf("Error deleting item: %w", delErr)
 		}
 		cmd.Printf("%v has been deleted.\n", itemToDel)
 	}

@@ -116,7 +116,6 @@ passh collection delete --collection-name Work
 <!---
 TODO:
 
-- Fix db file creation/name hashing
 - Create a way to look for passh files by revershing hash method
 - Finish setting up collection table
 - Add collection argument to login
