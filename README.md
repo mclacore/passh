@@ -116,10 +116,7 @@ passh collection delete --collection-name Work
 <!---
 TODO:
 
-- Create a way to look for passh files by revershing hash method
-- Finish setting up collection table
-- Add collection argument to login
-- Create a default collection for initial login items
+- Create a way to look for passh files
 - Move login items to another collection
 - Need to decrypt on db call, then encrypt after db call
 - Need fast decrypt/encrypt

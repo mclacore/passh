@@ -43,6 +43,14 @@ func GetCollection(db *gorm.DB, colName string) (*Collection, error) {
 	return &collection, nil
 }
 
+func GetCollectionById(db *gorm.DB, colId int) (*Collection, error) {
+	result := db.Select("name").Where("id = ?", colId).Find(&collection)		
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &collection, nil
+}
+
 func ListCollections(db *gorm.DB) (*[]Collection, error) {
 	var collections []Collection
 

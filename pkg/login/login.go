@@ -41,8 +41,8 @@ func CreateLoginItem(db *gorm.DB, item LoginItem) error {
 	return nil
 }
 
-func GetLoginItem(db *gorm.DB, itemName string) (*LoginItem, error) {
-	result := db.Where(&LoginItem{ItemName: itemName}).Find(&loginItem)
+func GetLoginItem(db *gorm.DB, itemName string, colId int) (*LoginItem, error) {
+	result := db.Where(&LoginItem{ItemName: itemName, CollectionID: colId}).Find(&loginItem)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -57,11 +57,12 @@ func UpdateLoginItem(db *gorm.DB, loginItem *LoginItem) error {
 	return nil
 }
 
-func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
+func ListLoginItems(db *gorm.DB, colId int) (*[]LoginItem, error) {
 	var loginItems []LoginItem
 
 	// add listing by item-name
 	result := db.Select("item_name").
+		Where(&LoginItem{CollectionID: colId}).
 		Order("item_name asc").
 		Find(&loginItems)
 	if result.Error != nil {
@@ -71,8 +72,8 @@ func ListLoginItems(db *gorm.DB) (*[]LoginItem, error) {
 	return &loginItems, nil
 }
 
-func DeleteLoginItem(db *gorm.DB, itemName string) error {
-	result := db.Where("item_name = ?", itemName).Delete(&loginItem)
+func DeleteLoginItem(db *gorm.DB, itemName string, colId int) error {
+	result := db.Where(&LoginItem{ItemName: itemName, CollectionID: colId}).Delete(&loginItem)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -84,7 +85,7 @@ func AssignCollection(db *gorm.DB, itemName, colName string) error {
 
 	colId := col.ID
 
-	result := db.Where("item_name = ?", itemName).Set("collection_id = ?", colId)
+	result := db.Where(&LoginItem{ItemName: itemName}).Set("collection_id = ?", colId)
 	if result.Error != nil {
 		return result.Error
 	}

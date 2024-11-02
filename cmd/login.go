@@ -111,6 +111,8 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 	if col == "" {
 		col = "default"
 	}
+	// need to somehow create a collections table here if a collection is specified but does not exist as a table
+	// if no such table of collections is found, it errors out but also automatically drops it in default. BAD
 	if colErr != nil {
 		return fmt.Errorf("Error setting collection: %w", colErr)
 	}
@@ -154,13 +156,26 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error setting item-name: %w", itemErr)
 	}
 
+	colName, colNameErr := cmd.Flags().GetString("collection-name")
+	fmt.Printf("colName: %v\n", colName)
+	if colName == "" {
+		colName = "default"
+	}
+	if colNameErr != nil {
+		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
+	}
+
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	// need to do collection checking here
-	getItem, getErr := login.GetLoginItem(db, itemName)
+	colId, colIdErr := collection.GetCollection(db, colName)
+	if colIdErr != nil {
+		return fmt.Errorf("Error fetching collection: %w", colIdErr)
+	}
+	
+	getItem, getErr := login.GetLoginItem(db, itemName, int(colId.ID))
 	if getErr != nil {
 		return fmt.Errorf("Error fetching login item: %w", getErr)
 	}
@@ -171,7 +186,9 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	// need to add a for loop here for all listed item-names that match itemName
+	// if list that returns login_items.item-name > 1, then for loop here?
 
+	cmd.Printf("Collection: %v\n", colId.Name)
 	cmd.Printf("Item Name: %v\n", getItem.ItemName)
 	cmd.Printf("Username: %v\n", getItem.Username)
 
@@ -187,6 +204,14 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 }
 
 func runUpdateLogin(cmd *cobra.Command, args []string) error {
+	colName, colNameErr := cmd.Flags().GetString("collection-name")
+	if colName == "" {
+		colName = "default"
+	}
+	if colNameErr != nil {
+		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
+	}
+
 	itemName, itemErr := cmd.Flags().GetString("item-name")
 	if itemErr != nil {
 		return fmt.Errorf("Error setting item-name: %w", itemErr)
@@ -196,8 +221,13 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
+	
+	colId, colIdErr := collection.GetCollection(db, colName)
+	if colIdErr != nil {
+		return fmt.Errorf("Error fetching collection: %w", colIdErr)
+	}
 
-	newLoginItem, newLoginErr := login.GetLoginItem(db, itemName)
+	newLoginItem, newLoginErr := login.GetLoginItem(db, itemName, int(colId.ID))
 	if newLoginErr != nil {
 		return fmt.Errorf("Error fetching login item to update: %w", newLoginErr)
 	}
@@ -234,13 +264,25 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 }
 
 func runListLogins(cmd *cobra.Command, args []string) error {
+	colName, colNameErr := cmd.Flags().GetString("collection-name")
+	if colName == "" {
+		colName = "default"
+	}
+	if colNameErr != nil {
+		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
+	}
+
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	// need to be able to filter specifically from collections here
-	items, itemErr := login.ListLoginItems(db)
+	colId, colIdErr := collection.GetCollection(db, colName)
+	if colIdErr != nil {
+		return fmt.Errorf("Error fetching collection: %w", colIdErr)
+	}
+
+	items, itemErr := login.ListLoginItems(db, int(colId.ID))
 	if itemErr != nil {
 		return fmt.Errorf("Error fetching login items: %w", itemErr)
 	}
@@ -252,6 +294,14 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 }
 
 func runDeleteLogin(cmd *cobra.Command, args []string) error {
+	colName, colNameErr := cmd.Flags().GetString("collection-name")
+	if colName == "" {
+		colName = "default"
+	}
+	if colNameErr != nil {
+		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
+	}
+	
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
@@ -262,6 +312,11 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error finding item to delete: %w", itemDelErr)
 	}
 
+	colId, colIdErr := collection.GetCollection(db, colName)
+	if colIdErr != nil {
+		return fmt.Errorf("Error fetching collection: %w", colIdErr)
+	}
+
 	confirm, confirmErr := prompt.ConfirmItemDelete()
 	if confirmErr != nil {
 		cmd.Printf("Operation cancelled.\n")
@@ -269,7 +324,7 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	if confirm == "y" || confirm == "Y" {
-		delErr := login.DeleteLoginItem(db, itemToDel)
+		delErr := login.DeleteLoginItem(db, itemToDel, int(colId.ID))
 		if delErr != nil {
 			return fmt.Errorf("Error deleting item: %w", delErr)
 		}
