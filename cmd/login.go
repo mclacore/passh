@@ -50,6 +50,7 @@ func NewCmdLogin() *cobra.Command {
 	loginUpdateCmd.Flags().StringP("username", "u", login.Username, "Username to update")
 	loginUpdateCmd.Flags().StringP("password", "p", login.Password, "Password to update")
 	loginUpdateCmd.Flags().StringP("url", "r", login.URL, "URL to update")
+	loginUpdateCmd.Flags().StringP("move-collection", "m", login.Collection.Name, "Collection to move to")
 
 	loginListCmd := &cobra.Command{
 		Use:   "list",
@@ -174,7 +175,7 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	if colIdErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", colIdErr)
 	}
-	
+
 	getItem, getErr := login.GetLoginItem(db, itemName, int(colId.ID))
 	if getErr != nil {
 		return fmt.Errorf("Error fetching login item: %w", getErr)
@@ -188,6 +189,7 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	// need to add a for loop here for all listed item-names that match itemName
 	// if list that returns login_items.item-name > 1, then for loop here?
 
+	// this is defaulting to blank if it's not set, and also colName is being set to default. also, it's still fetching from table even though collection is not set which it needs to be.
 	cmd.Printf("Collection: %v\n", colId.Name)
 	cmd.Printf("Item Name: %v\n", getItem.ItemName)
 	cmd.Printf("Username: %v\n", getItem.Username)
@@ -221,7 +223,7 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
-	
+
 	colId, colIdErr := collection.GetCollection(db, colName)
 	if colIdErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", colIdErr)
@@ -247,6 +249,11 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error updating URL: %w", urlErr)
 	}
 
+	moveCol, moveColErr := cmd.Flags().GetString("move-collection")
+	if moveColErr != nil {
+		return fmt.Errorf("Error moving login item to new collection: %w", moveColErr)
+	}
+
 	if len(username) > 0 {
 		newLoginItem.Username = username
 	}
@@ -255,6 +262,16 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	}
 	if len(url) > 0 {
 		newLoginItem.URL = url
+	}
+
+	if len(moveCol) > 0 {
+		newColId, newColIdErr := collection.GetCollection(db, moveCol)
+		fmt.Printf("moveCol: %v\n", moveCol)
+		fmt.Printf("newColId: %v\n", newColId.ID)
+		if newColIdErr != nil {
+			return fmt.Errorf("Error moving login item to new collection: %w", newColIdErr)
+		}
+		newLoginItem.CollectionID = int(newColId.ID)
 	}
 
 	login.UpdateLoginItem(db, newLoginItem)
@@ -301,7 +318,7 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 	if colNameErr != nil {
 		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
 	}
-	
+
 	db, dbErr := database.ConnectToDB()
 	if dbErr != nil {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
