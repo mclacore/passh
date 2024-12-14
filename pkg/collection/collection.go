@@ -9,7 +9,7 @@ import (
 
 type Collection struct {
 	gorm.Model
-	Name string `gorm:"unique"` // gorm:unique is not working? maybe add checking in create step
+	Name string `gorm:"uniqueIndex"` // gorm:unique is not working? maybe add checking in create step
 }
 
 var collection Collection

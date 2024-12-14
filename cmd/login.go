@@ -158,7 +158,8 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	colName, colNameErr := cmd.Flags().GetString("collection-name")
-	fmt.Printf("colName: %v\n", colName)
+	// remove this part, and instead use promptui to check if a collection exists. if not, prompt user to create one on the spot.
+	// if only 1 collection exists, set it as the default somehow and don't need a prompt. however, when a 2+ collections exist, require it every time
 	if colName == "" {
 		colName = "default"
 	}
@@ -171,14 +172,9 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	colId, colIdErr := collection.GetCollection(db, colName)
-	if colIdErr != nil {
-		return fmt.Errorf("Error fetching collection: %w", colIdErr)
-	}
-
-	getItem, getErr := login.GetLoginItem(db, itemName, int(colId.ID))
-	if getErr != nil {
-		return fmt.Errorf("Error fetching login item: %w", getErr)
+	getCol, getColErr := collection.GetCollection(db, colName)
+	if getColErr != nil {
+		return fmt.Errorf("Error fetching collection: %w", getColErr)
 	}
 
 	showPass, passErr := cmd.Flags().GetBool("show-password")
@@ -186,21 +182,39 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error showing password: %w", passErr)
 	}
 
-	// need to add a for loop here for all listed item-names that match itemName
-	// if list that returns login_items.item-name > 1, then for loop here?
-
-	// this is defaulting to blank if it's not set, and also colName is being set to default. also, it's still fetching from table even though collection is not set which it needs to be.
-	cmd.Printf("Collection: %v\n", colId.Name)
-	cmd.Printf("Item Name: %v\n", getItem.ItemName)
-	cmd.Printf("Username: %v\n", getItem.Username)
-
-	if showPass {
-		cmd.Printf("Password: %v\n", getItem.Password)
-	} else {
-		cmd.Println("Password: <hidden>")
+	itemList, itemListErr := login.ListLoginItems(db, int(getCol.ID))
+	if itemListErr != nil {
+		return fmt.Errorf("Error fetching login items: %w", itemListErr)
 	}
 
-	cmd.Printf("URL: %v\n", getItem.URL)
+	for _, item := range *itemList {
+		if itemName == item.ItemName {
+			// GetLoginItem returning the first result twice. this may not be easily possible, and might need to make item_names unique
+			getItem, getErr := login.GetLoginItem(db, item.ItemName, int(getCol.ID))
+			// OMG SO THIS IS THE PROZBLEM. GET ITEM gets the first on the list. get login either has to return all of the same item name or make itemname unique
+			if getItem.ItemName == "" {
+				return fmt.Errorf("Cannot find login item named %v in %v collection", itemName, colName)
+			}
+			if getErr != nil {
+				return fmt.Errorf("Error fetching login item: %w", getErr)
+			}
+
+			cmd.Printf("---\n")
+			cmd.Printf("Collection: %v\n", getCol.Name)
+			cmd.Printf("Item Name: %v\n", getItem.ItemName)
+			cmd.Printf("Username: %v\n", getItem.Username)
+
+			if showPass {
+				cmd.Printf("Password: %v\n", getItem.Password)
+			} else {
+				cmd.Println("Password: <hidden>")
+			}
+
+			cmd.Printf("URL: %v\n", getItem.URL)
+		}
+	}
+	// need to add a for loop here for all listed item-names that match itemName
+	// if list that returns login_items.item-name > 1, then for loop here?
 
 	return nil
 }
@@ -282,9 +296,6 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 
 func runListLogins(cmd *cobra.Command, args []string) error {
 	colName, colNameErr := cmd.Flags().GetString("collection-name")
-	if colName == "" {
-		colName = "default"
-	}
 	if colNameErr != nil {
 		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
 	}

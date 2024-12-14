@@ -10,12 +10,12 @@ import (
 
 type LoginItem struct {
 	gorm.Model
-	ItemName     string
+	ItemName     string `gorm:"not null;uniqueIndex:idx_item_collection"`
 	Username     string
 	Password     string
 	URL          string
-	CollectionID int
-	Collection   collection.Collection
+	CollectionID int                   `gorm:"not null;uniqueIndex:idx_item_collection"`
+	Collection   collection.Collection `gorm:"foreignKey:CollectionID;constraint:OnDelete:CASCADE;"`
 }
 
 var loginItem LoginItem
@@ -42,7 +42,7 @@ func CreateLoginItem(db *gorm.DB, item LoginItem) error {
 }
 
 func GetLoginItem(db *gorm.DB, itemName string, colId int) (*LoginItem, error) {
-	result := db.Where(&LoginItem{ItemName: itemName, CollectionID: colId}).Find(&loginItem)
+	result := db.Where("item_name = ? AND collection_id = ?", itemName, colId).Find(&loginItem)
 	if result.Error != nil {
 		return nil, result.Error
 	}
