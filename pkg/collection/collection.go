@@ -35,8 +35,8 @@ func CreateCollection(db *gorm.DB, col Collection) error {
 	return nil
 }
 
-func GetCollection(db *gorm.DB, colName string) (*Collection, error) {
-	result := db.Where(&Collection{Name: colName}).Find(&collection)
+func GetCollectionByName(db *gorm.DB, colName string) (*Collection, error) {
+	result := db.Where("name = ?", colName).Find(&collection)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -44,7 +44,16 @@ func GetCollection(db *gorm.DB, colName string) (*Collection, error) {
 }
 
 func GetCollectionById(db *gorm.DB, colId int) (*Collection, error) {
-	result := db.Select("name").Where("id = ?", colId).Find(&collection)		
+	result := db.Where("id = ?", colId).Find(&collection)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &collection, nil
+}
+
+// need to build this into cmd/collection.go
+func UpdateCollection(db *gorm.DB, colName string) (*Collection, error) {
+	result := db.Where("name = ?", colName).Find(&collection)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -18,13 +18,15 @@ func NewCmdLogin() *cobra.Command {
 		Use:   "login",
 		Short: "Create, update, or retreive a login credential",
 	}
+	loginCmd.PersistentFlags().StringP("collection-name", "c", "", "Name for the login collection")
+	loginCmd.MarkPersistentFlagRequired("collection-name")
 
 	loginNewCmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new login credential",
 		RunE:  runNewLogin,
 	}
-	loginNewCmd.MarkFlagRequired("collection-name")
+	loginNewCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
 	loginNewCmd.MarkFlagRequired("item-name")
 	loginNewCmd.Flags().StringP("username", "u", "", "Username for the login credential")
 	loginNewCmd.Flags().StringP("password", "p", "", "Password for the login credential")
@@ -36,7 +38,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Get login item properties",
 		RunE:  runGetLogin,
 	}
-	loginGetCmd.MarkFlagRequired("collection-name")
+	loginGetCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
 	loginGetCmd.MarkFlagRequired("item-name")
 	loginGetCmd.Flags().BoolP("show-password", "p", false, "Show password")
 
@@ -45,7 +47,7 @@ func NewCmdLogin() *cobra.Command {
 		Short: "Update login item property",
 		RunE:  runUpdateLogin,
 	}
-	loginUpdateCmd.MarkFlagRequired("collection-name")
+	loginUpdateCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
 	loginUpdateCmd.MarkFlagRequired("item-name")
 	loginUpdateCmd.Flags().StringP("username", "u", login.Username, "Username to update")
 	loginUpdateCmd.Flags().StringP("password", "p", login.Password, "Password to update")
@@ -57,7 +59,6 @@ func NewCmdLogin() *cobra.Command {
 		Short: "List all login items",
 		RunE:  runListLogins,
 	}
-	loginListCmd.MarkFlagRequired("collection-name")
 
 	loginDeleteCmd := &cobra.Command{
 		Use:     "delete",
@@ -65,16 +66,14 @@ func NewCmdLogin() *cobra.Command {
 		Short:   "Delete a login item",
 		RunE:    runDeleteLogin,
 	}
+	loginDeleteCmd.Flags().StringP("item-name", "i", "", "Name for the login item")
 	loginDeleteCmd.MarkFlagRequired("item-name")
-	loginDeleteCmd.MarkFlagRequired("collection-name")
 
 	loginCmd.AddCommand(loginNewCmd)
 	loginCmd.AddCommand(loginGetCmd)
 	loginCmd.AddCommand(loginUpdateCmd)
 	loginCmd.AddCommand(loginListCmd)
 	loginCmd.AddCommand(loginDeleteCmd)
-	loginCmd.PersistentFlags().StringP("item-name", "i", "", "Name for the login item")
-	loginCmd.PersistentFlags().StringP("collection-name", "c", "default", "Name for the login collection")
 	return loginCmd
 }
 
@@ -109,11 +108,7 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	col, colErr := cmd.Flags().GetString("collection-name")
-	if col == "" {
-		col = "default"
-	}
 	// need to somehow create a collections table here if a collection is specified but does not exist as a table
-	// if no such table of collections is found, it errors out but also automatically drops it in default. BAD
 	if colErr != nil {
 		return fmt.Errorf("Error setting collection: %w", colErr)
 	}
@@ -123,13 +118,13 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	colId, colIdErr := collection.GetCollection(db, col)
+	colId, colIdErr := collection.GetCollectionByName(db, col)
 	if colId == nil {
 		defCol := collection.Collection{
 			Name: "default",
 		}
 		collection.CreateCollection(db, defCol)
-		colId, colIdErr = collection.GetCollection(db, "default")
+		colId, colIdErr = collection.GetCollectionByName(db, "default")
 	}
 	if colIdErr != nil {
 		return fmt.Errorf("Error getting collection id: %w", colIdErr)
@@ -162,9 +157,6 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 	colName, colNameErr := cmd.Flags().GetString("collection-name")
 	// remove this part, and instead use promptui to check if a collection exists. if not, prompt user to create one on the spot.
 	// if only 1 collection exists, set it as the default somehow and don't need a prompt. however, when a 2+ collections exist, require it every time
-	if colName == "" {
-		colName = "default"
-	}
 	if colNameErr != nil {
 		return fmt.Errorf("Error setting collection-name: %w", colNameErr)
 	}
@@ -174,7 +166,7 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	getCol, getColErr := collection.GetCollection(db, colName)
+	getCol, getColErr := collection.GetCollectionByName(db, colName)
 	if getColErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", getColErr)
 	}
@@ -189,6 +181,8 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error fetching login item: %w", getErr)
 	}
 
+	// currently printing out empty struct if collection/item name is given
+	// but does not exist in database
 	cmd.Printf("\n")
 	cmd.Printf("Collection: %v\n", getCol.Name)
 	cmd.Printf("Item Name: %v\n", getItem.ItemName)
@@ -224,7 +218,7 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	colId, colIdErr := collection.GetCollection(db, colName)
+	colId, colIdErr := collection.GetCollectionByName(db, colName)
 	if colIdErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", colIdErr)
 	}
@@ -265,8 +259,9 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(moveCol) > 0 {
-		newColId, newColIdErr := collection.GetCollection(db, moveCol)
 		fmt.Printf("moveCol: %v\n", moveCol)
+		newColId, newColIdErr := collection.GetCollectionByName(db, moveCol)
+		// newColId is wrong. getting current ID
 		fmt.Printf("newColId: %v\n", newColId.ID)
 		if newColIdErr != nil {
 			return fmt.Errorf("Error moving login item to new collection: %w", newColIdErr)
@@ -291,7 +286,7 @@ func runListLogins(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error connecting to database: %w", dbErr)
 	}
 
-	colId, colIdErr := collection.GetCollection(db, colName)
+	colId, colIdErr := collection.GetCollectionByName(db, colName)
 	if colIdErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", colIdErr)
 	}
@@ -326,7 +321,7 @@ func runDeleteLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error finding item to delete: %w", itemDelErr)
 	}
 
-	colId, colIdErr := collection.GetCollection(db, colName)
+	colId, colIdErr := collection.GetCollectionByName(db, colName)
 	if colIdErr != nil {
 		return fmt.Errorf("Error fetching collection: %w", colIdErr)
 	}
