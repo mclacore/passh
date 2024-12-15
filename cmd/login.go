@@ -143,6 +143,8 @@ func runNewLogin(cmd *cobra.Command, args []string) error {
 		CollectionID: int(colId.ID),
 	}
 
+	// need to check for unique constraints and error out about duplicate entry
+	// currently passing through SQL error
 	createErr := login.CreateLoginItem(db, loginItem)
 	if createErr != nil {
 		return fmt.Errorf("Error creating new login item: %w", createErr)
@@ -182,39 +184,23 @@ func runGetLogin(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error showing password: %w", passErr)
 	}
 
-	itemList, itemListErr := login.ListLoginItems(db, int(getCol.ID))
-	if itemListErr != nil {
-		return fmt.Errorf("Error fetching login items: %w", itemListErr)
+	getItem, getErr := login.GetLoginItem(db, itemName, int(getCol.ID))
+	if getErr != nil {
+		return fmt.Errorf("Error fetching login item: %w", getErr)
 	}
 
-	for _, item := range *itemList {
-		if itemName == item.ItemName {
-			// GetLoginItem returning the first result twice. this may not be easily possible, and might need to make item_names unique
-			getItem, getErr := login.GetLoginItem(db, item.ItemName, int(getCol.ID))
-			// OMG SO THIS IS THE PROZBLEM. GET ITEM gets the first on the list. get login either has to return all of the same item name or make itemname unique
-			if getItem.ItemName == "" {
-				return fmt.Errorf("Cannot find login item named %v in %v collection", itemName, colName)
-			}
-			if getErr != nil {
-				return fmt.Errorf("Error fetching login item: %w", getErr)
-			}
+	cmd.Printf("\n")
+	cmd.Printf("Collection: %v\n", getCol.Name)
+	cmd.Printf("Item Name: %v\n", getItem.ItemName)
+	cmd.Printf("Username: %v\n", getItem.Username)
 
-			cmd.Printf("---\n")
-			cmd.Printf("Collection: %v\n", getCol.Name)
-			cmd.Printf("Item Name: %v\n", getItem.ItemName)
-			cmd.Printf("Username: %v\n", getItem.Username)
-
-			if showPass {
-				cmd.Printf("Password: %v\n", getItem.Password)
-			} else {
-				cmd.Println("Password: <hidden>")
-			}
-
-			cmd.Printf("URL: %v\n", getItem.URL)
-		}
+	if showPass {
+		cmd.Printf("Password: %v\n", getItem.Password)
+	} else {
+		cmd.Println("Password: <hidden>")
 	}
-	// need to add a for loop here for all listed item-names that match itemName
-	// if list that returns login_items.item-name > 1, then for loop here?
+
+	cmd.Printf("URL: %v\n", getItem.URL)
 
 	return nil
 }
