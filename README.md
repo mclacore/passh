@@ -117,16 +117,10 @@ passh collection delete --collection-name Work
 TODO:
 
 - Create a way to look for passh files
-- Move login items to another collection
 - Need to decrypt on db call, then encrypt after db call
 - Need fast decrypt/encrypt
 - Double encryption on passwords?
-- Iterate through itemNames when doing a GET and list all matching items
 - Set up SSH server
 - Set up docker image
 
-Move login item to another collection
-```bash
-passh login move --from-collection Personal --to-collection Work
-```
 -->
