@@ -259,10 +259,7 @@ func runUpdateLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(moveCol) > 0 {
-		fmt.Printf("moveCol: %v\n", moveCol)
 		newColId, newColIdErr := collection.GetCollectionByName(db, moveCol)
-		// newColId is wrong. getting current ID
-		fmt.Printf("newColId: %v\n", newColId.ID)
 		if newColIdErr != nil {
 			return fmt.Errorf("Error moving login item to new collection: %w", newColIdErr)
 		}

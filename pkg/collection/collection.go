@@ -36,11 +36,12 @@ func CreateCollection(db *gorm.DB, col Collection) error {
 }
 
 func GetCollectionByName(db *gorm.DB, colName string) (*Collection, error) {
-	result := db.Where("name = ?", colName).Find(&collection)
+	var col Collection
+	result := db.Where("name = ?", colName).Find(&col)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &collection, nil
+	return &col, nil
 }
 
 func GetCollectionById(db *gorm.DB, colId int) (*Collection, error) {
