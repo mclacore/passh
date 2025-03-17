@@ -5,8 +5,10 @@ package cmd
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/mclacore/passh/pkg/prompt"
+	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
 )
 
@@ -29,14 +31,32 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		if os.Getenv("PASSH_PASS") != "" {
-			// validate password then proceed, if not return failure
+		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
+		tempPass := os.Getenv("PASSH_PASS")
+		timeout, timeoutErr  := strconv.Atoi(os.Getenv("MASTER_PASS_TIMEOUT"))
+		if timeoutErr != nil {
+			os.Exit(5)
 		}
 
-		if os.Getenv("PASSH_PERSISTENT_PASS") != "" {
+		if persistPass != "" {
+			if err := password.ValidateMasterPassword(persistPass); err != nil {
+				os.Exit(2)
+			}
+		} else if tempPass != "" {
+			if err := password.ValidateMasterPassword(tempPass); err != nil {
+				os.Exit(3)
+			}
+		} else {
+			passInput, passInputErr := prompt.GetMasterPassword()
+			if passInputErr != nil {
+				os.Exit(4)
+			}
+			os.Setenv("PASSH_PASS", passInput)
+			if os.Getenv("MASTER_PASS_TIMEOUT") == "" {
+				os.Setenv("MASTER_PASS_TIMEOUT", "900")
+			}
+			go password.MasterPasswordTimeout(timeout)
 		}
-
-		passInput := prompt.GetPassword()
 	},
 }
 
