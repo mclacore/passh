@@ -116,6 +116,7 @@ passh collection delete --collection-name Work
 <!---
 TODO:
 
+- unlock passh with password, keep unlocked for 15 minutes? allow setting of env var?
 - Create a way to look for passh files
 - Need to decrypt on db call, then encrypt after db call
 - Need fast decrypt/encrypt

@@ -6,6 +6,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +28,16 @@ var rootCmd = &cobra.Command{
 	Long:  rootCmdLong,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		if os.Getenv("PASSH_PASS") != "" {
+			// validate password then proceed, if not return failure
+		}
+
+		if os.Getenv("PASSH_PERSISTENT_PASS") != "" {
+		}
+
+		passInput := prompt.GetPassword()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
