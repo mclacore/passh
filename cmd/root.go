@@ -6,8 +6,10 @@ package cmd
 import (
 	"os"
 	"strconv"
+	"log"
 
 	"github.com/mclacore/passh/pkg/prompt"
+	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/spf13/cobra"
 )
@@ -31,29 +33,42 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		if os.Getenv("PASSH_DB_HOST") == "" {
+			prompt.WelcomeWizard()
+		}
+
+		// Set this if you don't want to re-auth into Passh after timeout
 		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
 		tempPass := os.Getenv("PASSH_PASS")
-		timeout, timeoutErr  := strconv.Atoi(os.Getenv("MASTER_PASS_TIMEOUT"))
+		timeout, timeoutErr  := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
 		if timeoutErr != nil {
-			os.Exit(5)
+			log.Printf("Error converting timeout string to int: %v", timeoutErr)
+			os.Exit(2)
 		}
 
 		if persistPass != "" {
-			if err := password.ValidateMasterPassword(persistPass); err != nil {
-				os.Exit(2)
+			if _, err := database.ConnectToDB(); err != nil {
+				log.Print("Invalid persistent password")
+				os.Exit(401)
 			}
 		} else if tempPass != "" {
-			if err := password.ValidateMasterPassword(tempPass); err != nil {
-				os.Exit(3)
+			if _, err := database.ConnectToDB(); err != nil {
+				log.Print("Invalid password")
+				os.Exit(401)
 			}
 		} else {
 			passInput, passInputErr := prompt.GetMasterPassword()
 			if passInputErr != nil {
-				os.Exit(4)
+				log.Printf("Something went wrong with inputting password: %v", passInputErr)
+				os.Exit(3)
+			}
+			if _, err := database.ConnectToDB(); err != nil {
+				log.Print("Invalid password")
+				os.Exit(401)
 			}
 			os.Setenv("PASSH_PASS", passInput)
-			if os.Getenv("MASTER_PASS_TIMEOUT") == "" {
-				os.Setenv("MASTER_PASS_TIMEOUT", "900")
+			if os.Getenv("PASSH_TIMEOUT") == "" {
+				os.Setenv("PASSH_TIMEOUT", "900")
 			}
 			go password.MasterPasswordTimeout(timeout)
 		}

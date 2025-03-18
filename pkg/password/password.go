@@ -40,13 +40,6 @@ func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) s
 	return string(password)
 }
 
-func ValidateMasterPassword(input string) error {
-	// validate entry in database
-	// if entry is empty, idk? 
-	// need to prompt user when tables are empty for a master password too
-	return err
-}
-
 func MasterPasswordTimeout(input int) {
 	time.Sleep(time.Duration(input) * time.Second)
 	os.Setenv("PASSH_PASS", "")
