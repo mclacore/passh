@@ -5,13 +5,11 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/mclacore/passh/pkg/database"
 )
 
 var promptsWizard = []func() error{
-	getHost,
-	getUser,
 	getPass,
-	getPort,
 }
 
 var validate = func(input string) error {
@@ -66,43 +64,11 @@ func GetMasterPassword() (string, error) {
 }
 
 func WelcomeWizard() error {
-	for _, step := range promptsWizard {
-		if err := step(); err != nil {
+	for _, prompt := range promptsWizard {
+		if err := prompt(); err != nil {
 			return err
 		}
 	}
-
-	return nil
-}
-
-func getHost() error {
-	prompt := promptui.Prompt{
-		Label:   "Set a database hostname",
-		Default: "localhost",
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		return err
-	}
-
-	os.Setenv("PASSH_DB_HOST", result)
-
-	return nil
-}
-
-func getUser() error {
-	prompt := promptui.Prompt{
-		Label:   "Create a Passh Username",
-		Default: "passh",
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		return err
-	}
-
-	os.Setenv("PASSH_DB_USER", result)
 
 	return nil
 }
@@ -119,23 +85,8 @@ func getPass() error {
 		return err
 	}
 
+	database.WizardPasswordSet(result)
 	os.Setenv("PASSH_PASS", result)
-
-	return nil
-}
-
-func getPort() error {
-	prompt := promptui.Prompt{
-		Label:   "Set a database port",
-		Default: "5432",
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		return err
-	}
-
-	os.Setenv("PASSH_DB_PORT", result)
 
 	return nil
 }

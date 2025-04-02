@@ -33,14 +33,18 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		// if db host is unset, start the welcome wizard for initial setup
-		if os.Getenv("PASSH_DB_HOST") == "" {
+		if os.Getenv("PASSH_USER") == "" {
+			os.Setenv("PASSH_USER", "postgres")
 			prompt.WelcomeWizard()
 		}
 
 		// Set this if you don't want to re-auth into Passh after timeout
 		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
 		tempPass := os.Getenv("PASSH_PASS")
+
+		if os.Getenv("PASSH_TIMEOUT") == "" {
+			os.Setenv("PASSH_TIMEOUT", "900")
+		}
 		timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
 		if timeoutErr != nil {
 			log.Printf("Error converting timeout string to int: %v", timeoutErr)
@@ -68,10 +72,6 @@ var rootCmd = &cobra.Command{
 			if _, err := database.ConnectToDB(); err != nil {
 				log.Print("Invalid password")
 				os.Exit(401)
-			}
-
-			if os.Getenv("PASSH_TIMEOUT") == "" {
-				os.Setenv("PASSH_TIMEOUT", "900")
 			}
 
 			go password.MasterPasswordTimeout(timeout)
