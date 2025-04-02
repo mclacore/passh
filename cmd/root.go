@@ -1,16 +1,16 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 Michael Lacore mclacore@gmail.com
 */
 package cmd
 
 import (
+	"log"
 	"os"
 	"strconv"
-	"log"
 
-	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/password"
+	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +33,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		// if db host is unset, start the welcome wizard for initial setup
 		if os.Getenv("PASSH_DB_HOST") == "" {
 			prompt.WelcomeWizard()
 		}
@@ -40,7 +41,7 @@ var rootCmd = &cobra.Command{
 		// Set this if you don't want to re-auth into Passh after timeout
 		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
 		tempPass := os.Getenv("PASSH_PASS")
-		timeout, timeoutErr  := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
+		timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
 		if timeoutErr != nil {
 			log.Printf("Error converting timeout string to int: %v", timeoutErr)
 			os.Exit(2)
@@ -62,14 +63,17 @@ var rootCmd = &cobra.Command{
 				log.Printf("Something went wrong with inputting password: %v", passInputErr)
 				os.Exit(3)
 			}
+
+			os.Setenv("PASSH_PASS", passInput)
 			if _, err := database.ConnectToDB(); err != nil {
 				log.Print("Invalid password")
 				os.Exit(401)
 			}
-			os.Setenv("PASSH_PASS", passInput)
+
 			if os.Getenv("PASSH_TIMEOUT") == "" {
 				os.Setenv("PASSH_TIMEOUT", "900")
 			}
+
 			go password.MasterPasswordTimeout(timeout)
 		}
 	},

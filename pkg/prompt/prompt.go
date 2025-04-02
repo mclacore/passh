@@ -2,11 +2,12 @@ package prompt
 
 import (
 	"errors"
+	"os"
 
 	"github.com/manifoldco/promptui"
 )
 
-var promptsWizard = []func() (string, error){
+var promptsWizard = []func() error{
 	getHost,
 	getUser,
 	getPass,
@@ -65,13 +66,16 @@ func GetMasterPassword() (string, error) {
 }
 
 func WelcomeWizard() error {
-	for _, prompt := range promptsWizard {
+	for _, step := range promptsWizard {
+		if err := step(); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func getHost() (string, error) {
+func getHost() error {
 	prompt := promptui.Prompt{
 		Label:   "Set a database hostname",
 		Default: "localhost",
@@ -79,13 +83,15 @@ func getHost() (string, error) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result, nil
+	os.Setenv("PASSH_DB_HOST", result)
+
+	return nil
 }
 
-func getUser() (string, error) {
+func getUser() error {
 	prompt := promptui.Prompt{
 		Label:   "Create a Passh Username",
 		Default: "passh",
@@ -93,13 +99,15 @@ func getUser() (string, error) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result, nil
+	os.Setenv("PASSH_DB_USER", result)
+
+	return nil
 }
 
-func getPass() (string, error) {
+func getPass() error {
 	prompt := promptui.Prompt{
 		Label:    "Create a Passh Password",
 		Validate: validate,
@@ -108,23 +116,26 @@ func getPass() (string, error) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result, nil
+	os.Setenv("PASSH_PASS", result)
+
+	return nil
 }
 
-func getPort() (string, error) {
+func getPort() error {
 	prompt := promptui.Prompt{
-		Label: "Set a database port",
+		Label:   "Set a database port",
 		Default: "5432",
 	}
 
 	result, err := prompt.Run()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result, nil
-}
+	os.Setenv("PASSH_DB_PORT", result)
 
+	return nil
+}
