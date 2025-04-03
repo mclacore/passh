@@ -26,13 +26,11 @@ var rootCmdLong = `
 CLI-based password manager, because why not?
 `
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "passh",
-	Short: "CLI-based password manager",
-	Long:  rootCmdLong,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	Use:               "passh",
+	Short:             "CLI-based password manager",
+	Long:              rootCmdLong,
+	DisableAutoGenTag: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = godotenv.Load(".env")
 
@@ -41,7 +39,7 @@ var rootCmd = &cobra.Command{
 			prompt.WelcomeWizard()
 		}
 
-		// Set this if you don't want to re-auth into Passh after timeout
+		// Set PASSH_PERSISTENT_PASS if you don't want to keep re-authing after timeout
 		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
 		tempPass := os.Getenv("PASSH_PASS")
 
@@ -70,12 +68,15 @@ var rootCmd = &cobra.Command{
 
 			timeout := os.Getenv("PASSH_TIMEOUT")
 			go password.MasterPasswordTimeout(timeout)
+
+			// need to add splash screen here after successfully auth'd
 		}
+	},
+	PostRun: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	rootCmd.AddCommand(NewCmdPass())
 	rootCmd.AddCommand(NewCmdLogin())
