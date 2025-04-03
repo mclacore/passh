@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/manifoldco/promptui"
-	"github.com/mclacore/passh/pkg/database"
 	"github.com/mclacore/passh/pkg/config"
+	"github.com/mclacore/passh/pkg/database"
 )
 
 var promptsWizard = []func() error{
@@ -85,8 +85,33 @@ func getPass() error {
 		return err
 	}
 
-	database.WizardPasswordSet(result)
-	config.SaveConfigValue("auth", "temp_pass", result)
+	persist, persistErr := persistPass()
+	if persistErr != nil {
+		return persistErr
+	}
+
+	if persist == "y" || persist == "Y" {
+		database.WizardPasswordSet(result)
+		config.SaveConfigValue("auth", "persist_pass", result)
+	} else {
+		database.WizardPasswordSet(result)
+		config.SaveConfigValue("auth", "temp_pass", result)
+		config.SaveConfigValue("auth", "persist_pass", "")
+	}
 
 	return nil
+}
+
+func persistPass() (string, error) {
+	prompt := promptui.Prompt{
+		Label:     "Enable persistent password? If enabled, Passh will not timeout and prompt to re-enter your master password. This can be changed later in your config.ini",
+		IsConfirm: true,
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }

@@ -48,13 +48,14 @@ func MasterPasswordTimeout(input string) {
 	timeVal, timeValErr := config.LoadConfigValue("auth", "timeout")
 	if timeValErr != nil {
 		log.Printf("Error loading timeout value: %v", timeValErr)
+		os.Exit(2)
 	}
 
 	if timeVal == "" {
 		config.SaveConfigValue("auth", "timeout", "900")
 	}
 
-	timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
+	timeout, timeoutErr := strconv.Atoi(timeVal)
 	if timeoutErr != nil {
 		log.Printf("Error converting timeout string to int: %v", timeoutErr)
 		os.Exit(2)
