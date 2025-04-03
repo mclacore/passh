@@ -2,21 +2,32 @@ package database
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/mclacore/passh/pkg/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"github.com/joho/godotenv"
 )
 
 func ConnectToDB() (*gorm.DB, error) {
-	_ = godotenv.Load(".env")
+	user, userErr := config.LoadConfigValue("auth", "username")
+	if userErr != nil {
+		return nil, userErr
+	}
+
+	pass, passErr := config.LoadConfigValue("auth", "persist_pass")
+	if pass == "" {
+		pass, passErr = config.LoadConfigValue("auth", "temp_pass")
+	}
+
+	if passErr != nil {
+		return nil, passErr
+	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s sslmode=disable",
 		"localhost",
 		"5432",
-		os.Getenv("PASSH_USER"),
-		os.Getenv("PASSH_PASS"),
+		user,
+		pass,
 		"postgres")
 
 	db, dbErr := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -28,8 +39,6 @@ func ConnectToDB() (*gorm.DB, error) {
 }
 
 func WizardPasswordSet(input string) (*gorm.DB, error) {
-	_ = godotenv.Load(".env")
-
 	dsn := fmt.Sprintf("host=%s port=%s database=%s sslmode=disable",
 		"localhost",
 		"5432",

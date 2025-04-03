@@ -7,9 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/mclacore/passh/pkg/config"
 	"github.com/mclacore/passh/pkg/database"
-	"github.com/mclacore/passh/pkg/env"
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
@@ -32,16 +31,28 @@ var rootCmd = &cobra.Command{
 	Long:              rootCmdLong,
 	DisableAutoGenTag: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		_ = godotenv.Load(".env")
+		user, userErr := config.LoadConfigValue("auth", "username")
+		if userErr != nil {
+			log.Printf("Error loading username: %v", userErr)
+			os.Exit(5)
+		}
 
-		if os.Getenv("PASSH_USER") == "" {
-			env.SetPasshUserEnv("postgres")
+		if user == "" {
+			config.SaveConfigValue("auth", "username", "postgres")
 			prompt.WelcomeWizard()
 		}
 
 		// Set PASSH_PERSISTENT_PASS if you don't want to keep re-authing after timeout
-		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
-		tempPass := os.Getenv("PASSH_PASS")
+		persistPass, persistPassErr := config.LoadConfigValue("auth", "persist_pass")
+		if persistPassErr != nil {
+			log.Printf("Error loading persistent pass: %v", persistPassErr)
+			os.Exit(5)
+		}
+		tempPass, tempPassErr := config.LoadConfigValue("auth", "temp_pass")
+		if tempPassErr != nil {
+			log.Printf("Error loading temp pass: %v", tempPassErr)
+			os.Exit(5)
+		}
 
 		if persistPass != "" {
 			if _, err := database.ConnectToDB(); err != nil {
@@ -60,16 +71,19 @@ var rootCmd = &cobra.Command{
 				os.Exit(3)
 			}
 
-			env.SetPasshTempPassEnv(passInput)
+			config.SaveConfigValue("auth", "temp_pass", passInput)
 			if _, err := database.ConnectToDB(); err != nil {
 				log.Print("Invalid password")
 				os.Exit(401)
 			}
 
-			timeout := os.Getenv("PASSH_TIMEOUT")
-			go password.MasterPasswordTimeout(timeout)
+			timeout, timeoutErr := config.LoadConfigValue("auth", "timeout")
+			if timeoutErr != nil {
+				log.Printf("Error loading timeout value: %v", timeoutErr)
+				os.Exit(5)
+			}
 
-			// need to add splash screen here after successfully auth'd
+			go password.MasterPasswordTimeout(timeout)
 		}
 	},
 	PostRun: func(cmd *cobra.Command, args []string) {

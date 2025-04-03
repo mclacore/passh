@@ -5,7 +5,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/mclacore/passh/pkg/database"
-	"github.com/mclacore/passh/pkg/env"
+	"github.com/mclacore/passh/pkg/config"
 )
 
 var promptsWizard = []func() error{
@@ -86,7 +86,7 @@ func getPass() error {
 	}
 
 	database.WizardPasswordSet(result)
-	env.SetPasshTempPassEnv(result)
+	config.SaveConfigValue("auth", "temp_pass", result)
 
 	return nil
 }
