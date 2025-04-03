@@ -6,9 +6,12 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"github.com/joho/godotenv"
 )
 
 func ConnectToDB() (*gorm.DB, error) {
+	_ = godotenv.Load(".env")
+
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s sslmode=disable",
 		"localhost",
 		"5432",
@@ -25,6 +28,8 @@ func ConnectToDB() (*gorm.DB, error) {
 }
 
 func WizardPasswordSet(input string) (*gorm.DB, error) {
+	_ = godotenv.Load(".env")
+
 	dsn := fmt.Sprintf("host=%s port=%s database=%s sslmode=disable",
 		"localhost",
 		"5432",

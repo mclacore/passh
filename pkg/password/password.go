@@ -1,9 +1,14 @@
 package password
 
 import (
+	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/mclacore/passh/pkg/env"
 )
 
 func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) string {
@@ -40,7 +45,19 @@ func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) s
 	return string(password)
 }
 
-func MasterPasswordTimeout(input int) {
-	time.Sleep(time.Duration(input) * time.Second)
-	os.Setenv("PASSH_PASS", "")
+func MasterPasswordTimeout(input string) {
+	_ = godotenv.Load(".env")
+
+	if os.Getenv("PASSH_TIMEOUT") == "" {
+		env.SetPasshTimeoutEnv("900")
+	}
+
+	timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
+	if timeoutErr != nil {
+		log.Printf("Error converting timeout string to int: %v", timeoutErr)
+		os.Exit(2)
+	}
+
+	time.Sleep(time.Duration(timeout) * time.Second)
+	env.SetPasshTempPassEnv("")
 }

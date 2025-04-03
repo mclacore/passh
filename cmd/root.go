@@ -6,9 +6,10 @@ package cmd
 import (
 	"log"
 	"os"
-	"strconv"
 
+	"github.com/joho/godotenv"
 	"github.com/mclacore/passh/pkg/database"
+	"github.com/mclacore/passh/pkg/env"
 	"github.com/mclacore/passh/pkg/password"
 	"github.com/mclacore/passh/pkg/prompt"
 	"github.com/spf13/cobra"
@@ -33,23 +34,16 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		_ = godotenv.Load(".env")
+
 		if os.Getenv("PASSH_USER") == "" {
-			os.Setenv("PASSH_USER", "postgres")
+			env.SetPasshUserEnv("postgres")
 			prompt.WelcomeWizard()
 		}
 
 		// Set this if you don't want to re-auth into Passh after timeout
 		persistPass := os.Getenv("PASSH_PERSISTENT_PASS")
 		tempPass := os.Getenv("PASSH_PASS")
-
-		if os.Getenv("PASSH_TIMEOUT") == "" {
-			os.Setenv("PASSH_TIMEOUT", "900")
-		}
-		timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
-		if timeoutErr != nil {
-			log.Printf("Error converting timeout string to int: %v", timeoutErr)
-			os.Exit(2)
-		}
 
 		if persistPass != "" {
 			if _, err := database.ConnectToDB(); err != nil {
@@ -68,12 +62,13 @@ var rootCmd = &cobra.Command{
 				os.Exit(3)
 			}
 
-			os.Setenv("PASSH_PASS", passInput)
+			env.SetPasshTempPassEnv(passInput)
 			if _, err := database.ConnectToDB(); err != nil {
 				log.Print("Invalid password")
 				os.Exit(401)
 			}
 
+			timeout := os.Getenv("PASSH_TIMEOUT")
 			go password.MasterPasswordTimeout(timeout)
 		}
 	},
