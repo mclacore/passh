@@ -39,6 +39,7 @@ var rootCmd = &cobra.Command{
 
 		if user == "" {
 			config.SaveConfigValue("auth", "username", "postgres")
+			config.SaveConfigValue("auth", "timeout", "900")
 			prompt.WelcomeWizard()
 		}
 

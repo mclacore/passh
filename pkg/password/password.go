@@ -7,8 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/mclacore/passh/pkg/env"
+	"github.com/mclacore/passh/pkg/config"
 )
 
 func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) string {
@@ -46,10 +45,13 @@ func GeneratePassword(length int, lowercase, uppercase, numbers, special bool) s
 }
 
 func MasterPasswordTimeout(input string) {
-	_ = godotenv.Load(".env")
+	timeVal, timeValErr := config.LoadConfigValue("auth", "timeout")
+	if timeValErr != nil {
+		log.Printf("Error loading timeout value: %v", timeValErr)
+	}
 
-	if os.Getenv("PASSH_TIMEOUT") == "" {
-		env.SetPasshTimeoutEnv("900")
+	if timeVal == "" {
+		config.SaveConfigValue("auth", "timeout", "900")
 	}
 
 	timeout, timeoutErr := strconv.Atoi(os.Getenv("PASSH_TIMEOUT"))
@@ -59,5 +61,5 @@ func MasterPasswordTimeout(input string) {
 	}
 
 	time.Sleep(time.Duration(timeout) * time.Second)
-	env.SetPasshTempPassEnv("")
+	config.SaveConfigValue("auth", "timeout", "")
 }
